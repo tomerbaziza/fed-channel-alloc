@@ -1,0 +1,36 @@
+with bigger than:
+The reward fucntion given by:
+
+def claculate_rewards(agent, current_channel, next_obs):
+
+    obs = np.squeeze(next_obs)
+    value = obs[current_channel]
+    
+    n = len(obs)
+    
+    obs = sorted(obs)
+
+    
+    i = 0
+    while i <= n-1 and value >= obs[i]:
+        i += 1
+ 
+    
+    r = (i/n  - 0.5) * 2
+
+    
+    if current_channel == agent.old_channel and r > 0.0:
+        if r <= 0.0:    
+            r =  r/2
+        else:
+            r = r * 2
+        
+    
+    return r
+
+with bigger than:
+without bigger than, the following condition:
+if current_channel == agent.old_channel and r > 0.0:
+
+change to:
+if current_channel == agent.old_channel:

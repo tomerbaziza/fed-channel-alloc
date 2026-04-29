@@ -1,0 +1,3 @@
+here the rewad is different.
+
+and we calculate it based on the state that the action took from and not from the next one !!!
