@@ -34,7 +34,7 @@ class ReplayMemory(object):
         self.new_states = np.empty(shape = (self.batch_size, self.agent_history_length, self.number_of_channels, self.width), dtype= np.float32)
         self.indices = np.empty(self.batch_size, dtype = np.int32)
         
-        self.time = np.empty(self.batch_size, dtype = np.float32)
+        self.time = np.empty(self.size, dtype = np.float32)
         
         self.asrdot = [None] * 6 # multiply by 5 to inslude original decision 
     

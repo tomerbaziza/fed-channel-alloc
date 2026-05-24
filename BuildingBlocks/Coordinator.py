@@ -1,3 +1,16 @@
+"""Episode coordinator for CARLTON-style multi-agent channel allocation.
+
+This module runs the decentralized execution loop and computes CARLTON rewards.
+
+Paper mapping (arXiv:2402.17773):
+- Section III-B: action space over channel indices.
+- Section III-C, Algorithm 2: personal reward.
+- Section III-C, Algorithm 3: social welfare reward.
+- Eq. (13): total reward as weighted sum of personal + social terms.
+- Section III-D, Eq. (17): state = concatenate(CBR, QV).
+- Section III-D, Algorithm 4: sequential turns and local replay collection.
+"""
+
 import sys 
 sys.path.append('SimulationEnvironments/')
 sys.path.append('DeepMellow_Single_agent/')
@@ -10,7 +23,7 @@ from Utils.utils import modify_obs_add_channnel_2b, save_to_gmb ,\
 from ReplayMemory import ReplayMemory
 from datetime import datetime
 import pickle 
-import tensorflow as tf
+import torch
 import pandas as pd 
 
 """ set Environment"""
@@ -25,6 +38,17 @@ NUM_OF_CHANNELS = 10
 activate_current_algo = False
 
 def calculate_rewards_personal(obs, action, agent) :
+    """Compute CARLTON personal reward component.
+
+    Paper reference:
+    - Section III-C, Algorithm 2 (personal reward, r_p).
+
+    Behavior:
+    - Uses channel quality (`obs[action]`) and ranking among all channels.
+    - Gives desired reward when quality exceeds threshold (~zeta=0.9).
+    - Adds a stay bonus when the channel does not change.
+    - Scales by 0.6; social term is added later in `calculate_rewards_sw`.
+    """
     obs = np.squeeze(obs)
     current_channel = action
     value = obs[current_channel]
@@ -46,6 +70,7 @@ def calculate_rewards_personal(obs, action, agent) :
         r = (i/n  - 0.5) * 2
     
     # print("fast rewards:", r)
+    # Algorithm 2 line 11-12 style: encourage channel stability.
     if current_channel == agent.old_channel and r > 0.0: # 'median up approach'
         # it was agent.current channel before updating
         r += 0.1*r 
@@ -53,6 +78,16 @@ def calculate_rewards_personal(obs, action, agent) :
     return 0.6 * r
 
 def calculate_rewards_sw(obs,agent, current_channel, agents, time):
+    """Compute social welfare reward from nearby agents.
+
+    Paper reference:
+    - Section III-C, Algorithm 3 (social welfare reward, r_sw).
+    - Eq. (13): total reward combines personal and social terms.
+
+    Implementation note:
+    - Neighbors are selected by Euclidean distance <= 500m (Gamma in paper).
+    - This function returns the social contribution scaled by 0.4.
+    """
     ## fix the -1 
     # print("current:", current_channel)
     
@@ -85,6 +120,7 @@ def calculate_rewards_sw(obs,agent, current_channel, agents, time):
         # print( agent_i.i_d ,":",agent_i.net_location)
         # print( agent.i_d ,":",agent.net_location)
         # print("R:", radius)
+        # Algorithm 3: neighbors are within distance threshold Gamma.
         if  radius<= 500:
             """I need to fic it to be better !!!"""
             agent_max_indx = agent_i.experience_replay_buffer.current - 1
@@ -95,6 +131,8 @@ def calculate_rewards_sw(obs,agent, current_channel, agents, time):
             # print("Neighbor of net %i, is %i" %(agent.i_d, agent_i.i_d) )
             r_s = agent_i.experience_replay_buffer.asrdot[2] #rewards[j]
             # print("r_s:", r_s)
+            # Aggregate neighboring personal rewards between two consecutive
+            # decision points of the current agent.
             if agent_time > previuse_time and agent_time < time:
                 
                 sw_r += r_s
@@ -132,6 +170,7 @@ def calculate_rewards_sw(obs,agent, current_channel, agents, time):
             
     # print("r:", r)
     # print("r_sw:", r_sw) #0.6 * r
+    # Eq. (13) split used in this repository: 0.6 * r_p + 0.4 * r_sw.
     return  0.4 *r_sw #0.5 * r  + 0.5 *r_sw #
     
 def define_new_agent(i, history_length,
@@ -145,10 +184,12 @@ def define_new_agent(i, history_length,
                      gamma,
                      dropout,
                      l2_regularization,
+                     global_weights = None,
                      i_d_folder = '' ,
                      sensing_window = 5,
                      verbose = False):
     
+    """Factory for one independent learner (network manager)."""
     agent = creat_player(number_of_actions = NUM_OF_CHANNELS,
                  history_length = history_length,
                  learning_rate = learning_rate,
@@ -165,6 +206,8 @@ def define_new_agent(i, history_length,
                  i_d = i,
                  i_d_folder = i_d_folder,
                  verbose = verbose )
+    if global_weights is not None:
+        agent.load_state_dict(global_weights)
                  
     return agent
    
@@ -201,7 +244,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
                 number_of_layers= 3, 
                 number_of_nodes = 128,
                 learning_rate = 0.00025, 
-                activation_fucntion = tf.nn.leaky_relu,
+                activation_fucntion = None,
                 mellowmax_constant = 0.02,
                 gamma = 0.9,
                 batch_size  = 64,
@@ -209,12 +252,26 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
                 l2_regularization = False,
                 i_d_folder = '',
                 epsilon = 0,
-                save_to_global_rb = True,
+                save_to_global_rb = False,
+                global_weights = None,
+                local_train_steps = 20,
                 verbose = False):
     
+    """Run one CARLTON episode over a scenario.
+
+    Paper reference:
+    - Section III-D, Algorithm 4: each network acts in sequence, stores local
+      transitions, and contributes to global replay after episode end.
+    - Eq. (17): state input includes CBR + QV.
+
+    Returns:
+        average_accumulated_reward_val, average_change_channel_counter,
+        agents dictionary, and raw game history rows.
+    """
     ## activate scenario 
     
     env = environment # EnvironmentWrapper()
+    # Eq. (17): CBR (channel binary representation) length.
     num_of_bits = int(np.floor(np.log2(NUM_OF_CHANNELS)) + 1)
     
     # create the agents
@@ -241,6 +298,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
                                                                 gamma = gamma,
                                                                 dropout = dropout,
                                                                 l2_regularization = l2_regularization,
+                                                                global_weights = global_weights,
                                                                 i_d_folder = i_d_folder,
                                                                 verbose = verbose))
     agents[agent_id].current_channel = current_master_channel
@@ -248,6 +306,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
     # print("obs:", obs.shape)
  
     obs = np.reshape(obs, newshape = (NUM_OF_CHANNELS,1))
+    # Eq. (17): s(t) = concatenate(CBR, QV(t)).
     obs = modify_obs_add_channnel_2b(obs,num_of_bits = num_of_bits,
                                     channel = current_master_channel)
     
@@ -294,13 +353,18 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
         
         if training:
             # action = agent.sample_action(state, eps = 1.0) # Applying sampling prom distribution
-            action = agent.sample_action(state, eps = epsilon, training = training ) ## exploration
+            # Section III-B: action is channel index in K.
+            state_tensor = torch.as_tensor(state, dtype=torch.float32)
+            action = agent.sample_action(state_tensor, eps = epsilon, training = training ) ## exploration
             # print("state:\n", state[num_of_bits:,0,0])
             # action = int(input("inser_action:"))
         else:
-            action = agent.sample_action(state, eps = 0.0, training = training) ## <-- we are going with the max value 
+            state_tensor = torch.as_tensor(state, dtype=torch.float32)
+            action = agent.sample_action(state_tensor, eps = 0.0, training = training) ## <-- we are going with the max value 
         
+        # Section III-C Algorithm 2: personal reward component.
         reward = calculate_rewards_personal(obs = state[num_of_bits:,0,0], action = action, agent = agent)
+        reward = float(torch.as_tensor(reward, dtype=torch.float32).item())
                                            
         # reward = calculate_rewards(obs = state[num_of_bits:,0,0],
         #                            agent = agent,
@@ -329,6 +393,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
             
             
         
+        # Environment transition after selecting dynamic channel action.
         next_obs, _ , done, info = env.step(action, agent_id)  
         
         if done :
@@ -368,6 +433,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
                                                                         gamma = gamma,
                                                                         dropout = dropout,
                                                                         l2_regularization=l2_regularization,
+                                                                        global_weights = global_weights,
                                                                         i_d_folder = i_d_folder,
                                                                         verbose = verbose)
             # new = True
@@ -393,15 +459,19 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
             previouse_obs = last_state[agent_id][num_of_bits:,0,0]
             # print("previouse_obs:", previouse_obs)
             # sdfsdf = input("sdfs")
+            # Section III-C Algorithm 3: delayed social reward update.
             r_sw = calculate_rewards_sw(obs = previouse_obs,
                                         agent = agents[agent_id],
                                         current_channel = current_master_channel,
                                         agents = agents,
                                         time = time)
+            r_sw = float(torch.as_tensor(r_sw, dtype=torch.float32).item())
+            # Eq. (13): r = rho * r_p + (1-rho) * r_sw (rho=0.6 here).
             agents[agent_id].experience_replay_buffer.asrdot[2]+= r_sw # (value = retro_r, index = 2)
             r_and_r_ws_reward = agents[agent_id].experience_replay_buffer.asrdot[2]
             # new = False
        ######## You can not add because you dont have the next observation  
+            # Eq. (17): build next state as [CBR ; QV].
             next_obs = modify_obs_add_channnel_2b(next_obs, # it was next_obs before
                                              num_of_bits = num_of_bits,
                                              channel = current_master_channel)
@@ -458,20 +528,28 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
         idx = agent.experience_replay_buffer.current - 1
         agent.experience_replay_buffer.terminal_flags[idx] = done
       
-    if mutex:
-        mutex.acquire()
-        
-    if training:
-        save_to_gmb(agents = agents,
-                    address_algo = address_algo,
-                    replay_memory_size = replay_memory_size,
-                    history_length= history_length,
-                    batch_size = batch_size,
-                    i_d_folder = i_d_folder, 
-                    number_of_channels = NUM_OF_CHANNELS)# 
-    #agents,  address_algo, max_size = 1000000, history_length = 1, batch_size = 64
-    if mutex:
-        mutex.release()
+    # In FRL mode each worker keeps only local replay.
+    if save_to_global_rb:
+        if mutex:
+            mutex.acquire()
+        if training:
+            save_to_gmb(agents = agents,
+                        address_algo = address_algo,
+                        replay_memory_size = replay_memory_size,
+                        history_length= history_length,
+                        batch_size = batch_size,
+                        i_d_folder = i_d_folder, 
+                        number_of_channels = NUM_OF_CHANNELS)
+        if mutex:
+            mutex.release()
+
+    # Local private replay training before federated upload.
+    if training and local_train_steps > 0:
+        for agent in agents.values():
+            rb = agent.experience_replay_buffer
+            if rb.count >= rb.batch_size:
+                for _ in range(local_train_steps):
+                    agent.learn()
 
     return average_accumulated_reward_val, average_change_channel_counter, agents, game_history 
 

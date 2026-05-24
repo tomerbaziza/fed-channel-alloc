@@ -1,10 +1,14 @@
+"""Utility helpers for CARLTON agents, state shaping, and replay aggregation.
+
+Paper mapping (arXiv:2402.17773):
+- Section III-D, Eq. (17): state uses concatenate(CBR, QV).
+- Section III-D, Algorithm 4: local replay memories are merged into global replay.
+"""
 
 import numpy as np 
-from DeepMellow_Single_agent.Nets_keras import AnnResNet_tunable, AnnResNet
-from DeepMellow_Single_agent.DeepMellow_no_epsilon import DeepMellow
+from DeepMellow_Single_agent.DeepMellow_no_epsilon import build_deepmellow
 from DeepMellow_Single_agent.ReplayMemory import ReplayMemory 
 from BuildingBlocks.Agent import Agent 
-import tensorflow as tf 
 import os, signal
 import pickle 
 import matplotlib.pyplot as plt 
@@ -100,7 +104,7 @@ def creat_player(number_of_actions = 30,
                  sensing_window = 5,
                  number_of_layers = 3,
                  number_of_nodes = 128,
-                 activation_fucntion = tf.nn.leaky_relu,
+                 activation_fucntion = None,
                  mellowmax_constant = 0.02,
                  gamma = 0.9,
                  dropout = False,
@@ -109,29 +113,28 @@ def creat_player(number_of_actions = 30,
                  i_d_folder = '',
                  verbose = False):
     
+    """Create one CARLTON network-manager agent.
+
+    Paper reference:
+    - Section III-D: DeepMellow-based value learner and replay-driven updates.
+    - Eq. (17): state dimensionality includes both QV and CBR bits.
+    """
     ############Load trained one######3
     """load_agent()"""
     num_of_channels = number_of_actions
     num_of_bits = int(np.floor(np.log2(num_of_channels)) + 1)
     
-    # net = AnnResNet(input_shape = (history_length, num_of_channels+num_of_bits),
-    #                 K = number_of_actions) <---""" I should chanhe it to be channgable """
-    
-    net = AnnResNet_tunable(input_shape = (history_length, num_of_channels+num_of_bits),
-                 K = number_of_actions,
-                 number_of_layers= number_of_layers,
-                 number_of_nodes = number_of_nodes,
-                 activation = activation_fucntion,
-                 dropout = dropout)
-    
-    model = DeepMellow(net = net, 
-                       gamma = gamma,
-                       number_of_actions = number_of_actions,
-                       lr = learning_rate,
-                       optimizer = tf.keras.optimizers.Adam,
-                       los_func = tf.keras.losses.Huber(),
-                       mellowmax_constant = mellowmax_constant,
-                       l2_regularization = l2_regularization)
+    # Eq. (17): NN input width = |QV| + |CBR|.
+    model = build_deepmellow(
+        num_channels_with_bits=(num_of_channels + num_of_bits) * history_length,
+        number_of_actions=number_of_actions,
+        gamma=gamma,
+        lr=learning_rate,
+        mellowmax_constant=mellowmax_constant,
+        number_of_layers=number_of_layers,
+        number_of_nodes=number_of_nodes,
+        l2_regularization=l2_regularization,
+    )
     
     experience_replay_buffer = ReplayMemory(capacity = max_experience,
                                              number_of_channels = num_of_channels +num_of_bits,
@@ -154,18 +157,28 @@ def creat_player(number_of_actions = 30,
         
         with open(path, 'rb') as file:
             weights = pickle.load(file)
-        
+
         agent.load_given_weights(weights)
         
     return agent
 
 
 def update_state(state, obs):
+    """Shift history window and append newest observation.
+
+    Paper reference:
+    - Section III-D: temporal state progression across sequential decisions.
+    """
     # print(state.shape)
     # print(obs.shape)# something is wrong here 
     return np.append(state[:,:,1:], np.expand_dims(obs, axis =2 ), axis = 2)
 
 def convert_to_base_2(x, num_of_bits = 5):
+    """Convert channel index to fixed-width binary CBR vector.
+
+    Paper reference:
+    - Eq. (17): CBR is concatenated with QV to form state.
+    """
     y = [np.float32(i) for i in np.binary_repr(x)]
     # print("0:", y, "x:", x)
     y_size = len(y)
@@ -177,6 +190,11 @@ def convert_to_base_2(x, num_of_bits = 5):
     return np.expand_dims(y, axis = 1)
 
 def modify_obs_add_channnel_2b(obs, num_of_bits = 0, channel = None):
+    """Build `concatenate(CBR, QV)` state feature vector.
+
+    Paper reference:
+    - Eq. (17), Section III-D.
+    """
     if num_of_bits == 0:
         return obs
     
@@ -310,6 +328,12 @@ def kill_simulation(operation = "op_run"):
     
 def save_to_gmb(agents,  address_algo, replay_memory_size = 100000, history_length = 1, batch_size = 64,
                 i_d_folder = '', number_of_channels = 30,  verbose = False):
+    """Merge all local agent replay buffers into one global replay memory.
+
+    Paper reference:
+    - Section III-D, Algorithm 4 lines 18-22: local replay data is transferred
+      to a global replay memory and sampled for centralized training updates.
+    """
     #address = 'C:\Aladdin\Aladdin\Algorithms\IQL_v2_for_real_simulation'
     os.chdir(address_algo)
     

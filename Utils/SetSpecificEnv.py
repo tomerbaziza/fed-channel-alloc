@@ -3,8 +3,21 @@ import numpy as np
 import pandas as pd 
 from SimulationEnvironments.Pythonic_Environment import python_env
 
+"""Scenario loader for CARLTON evaluation/training.
+
+Builds a `python_env` instance from CSV-defined user locations.
+This file provides the fixed-scenario branch of Section II-B setup and feeds
+the environment used later in Section III-D execution/training loops.
+"""
+
 
 def set_specific_env(scenario_name, number_of_channels=30, training = False):
+    """Instantiate `python_env` from a named scenario on disk.
+
+    Paper reference:
+    - Section II-B: scenario geometry (network/user spatial layout).
+    - Section III-D: resulting environment is consumed by CARLTON loop.
+    """
     print("Activate: ", scenario_name, " for testing!")
     ## Check if there is a folder for checking 
     path = 'scenarios_for_test/' + scenario_name

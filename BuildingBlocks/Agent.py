@@ -1,11 +1,22 @@
 import numpy as np 
-import os 
-import pickle 
-import time 
+
+"""Agent wrappers for CARLTON network managers.
+
+Paper mapping (arXiv:2402.17773):
+- Section III-B: selected action is a channel index.
+- Section III-D: each network manager acts as an independent learner.
+"""
+
 class Agent(object):
     
     def __init__(self, model, experience_replay_buffer, sensing_window = None, i_d = None,
                  verbose = False):
+        """Create an agent that owns model + replay memory.
+
+        Paper reference:
+        - Section III-D: each network manager maintains local replay memory and
+          learns through value-function updates.
+        """
         
         # model == Agent brain
         assert sensing_window != None ,"Please Enter a Valid window sensing size"
@@ -21,6 +32,10 @@ class Agent(object):
         
         
     def update_current_channel(self, channel):
+        """Track spectrum mobility statistics for this agent.
+
+        This supports CARLTON's convergence/channel-switch analysis metrics.
+        """
         if self.current_channel is not None:
             if self.old_channel != channel: 
                 self.old_channel = int(self.current_channel)
@@ -28,11 +43,17 @@ class Agent(object):
         self.current_channel = channel
         
     def sample_action(self, state, eps,training):
+        """Select a channel action given current state and exploration level.
+
+        Paper reference:
+        - Section III-B (action space), Eq. (14)-(15) implemented by model.
+        """
         action = self.model.sample_action(state, eps, training)
         self.action = action
         return action
     
     def learn(self): # experience_replay_buffer
+        """Perform one replay-based model update for this agent."""
         cost = self.model.learn(self.experience_replay_buffer ,self.experience_replay_buffer.batch_size)
 
         return cost
@@ -52,8 +73,16 @@ class Agent(object):
             print("Given weights were loaded!")
       
     def get_model_weights(self):
-        weights = [w.numpy() for w in self.model.net.trainable_params]
-        return weights 
+        return self.model.get_state_dict()
+
+    def load_model_weights(self, state_dict):
+        self.model.load_state_dict(state_dict)
+
+    def state_dict(self):
+        return self.model.get_state_dict()
+
+    def load_state_dict(self, weights):
+        self.model.load_state_dict(weights)
             
                 
     

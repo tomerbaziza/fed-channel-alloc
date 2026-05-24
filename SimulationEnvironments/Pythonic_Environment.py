@@ -1,3 +1,22 @@
+"""Wireless environment used by CARLTON training/evaluation.
+
+This module implements the wireless simulation described in:
+`SINR-Aware Deep Reinforcement Learning for Distributed Dynamic Channel Allocation`
+(arXiv:2402.17773).
+
+Paper mapping:
+- Section II-A: system and interference model over non-orthogonal channels.
+- Eq. (2): SINR definition.
+- Eq. (3)-(4): received power and Egli path-loss components.
+- Eq. (5)-(6): interference aggregation across other networks/channels.
+- Eq. (7): thermal noise contribution.
+- Section III-A, Eq. (11)-(12): BSINR thresholding and quality-vector construction.
+
+Implementation note:
+- The code keeps the same original behavior and units handling used in this repository.
+  Comments below explain the intended paper correspondence at each step.
+"""
+
 import matplotlib.pyplot as plt 
 import matplotlib.cm as cm
 import numpy as np 
@@ -8,6 +27,11 @@ import random
 
 THRESHOLD = -100 #dBm
 class User(object):
+    """Represents one wireless user inside a network.
+
+    Attributes such as antenna gain/height and transmit power are used by the
+    Egli-based link budget and interference computations in `Net`.
+    """
     def __init__(self, location, identity, power, num_channels):
         self.location = location
         self.user_id = identity                           # tuple: (network_id, user_id)
@@ -20,6 +44,12 @@ class User(object):
         
       
 class Net():
+    """A local network whose manager chooses one operating channel.
+
+    Paper reference:
+    - Section II-A: each network operates on a single channel per slot.
+    - Eq. (3)-(4): link-budget terms (power minus path loss).
+    """
     def __init__(self, number_of_users, location, net_id, 
                  power = 2,optional_channels  = 30, # was 30 
                  initial_channel  = None,
@@ -81,7 +111,9 @@ class Net():
             self.users.append(user)
             
         
-        ## Define the master of the net   
+        ## Define the master of the net
+        # Section II-B: network-manager concept. The selected manager is the user
+        # with minimum total Euclidean distance to other users in the same network.
         self.master =None 
         min_val = sys.maxsize
         self.intensity_radius = 1.2
@@ -100,6 +132,8 @@ class Net():
                 min_val = val
         
         ## calculate the minimal PR
+        # Eq. (3): PR = PT - PL. We keep the minimal in-network received power and
+        # use it as a conservative signal term for SINR sensing in create_sensed_vector.
         self.pr_min = sys.maxsize
         for  i in range(number_of_users):
             user_1 = self.users[i]
@@ -113,28 +147,31 @@ class Net():
         
                 
     def calculate_distance(self,p1,p2):
+        """Euclidean distance helper used for manager/neighbor selection logic."""
         return np.sqrt((p1[0] - p2[0])**2 + (p2[1] - p1[1])**2)
     
     
     def define_channel(self, channel):
+        """Apply the selected channel action for this network.
+
+        Paper reference:
+        - Section III-B (Action Space): an action is a channel index in K.
+        """
         self.channel = channel
       
     
     
     def create_noise_matrix(self, networks, threshold = None, channel_model = 'Egli'):
-        """
-        
+        """Compute per-user/per-channel interference matrix in dBm.
 
-        Parameters
-        ----------
-        networks : list of Net classes
-        threshold : int, level from which we consider disconnected user
-        channel_model : string, The mathematical model that we use for the channel
+        Paper reference:
+        - Eq. (5): aggregate interference from all other networks.
+        - Eq. (6): per-link interference with spectral attenuation.
+        - Eq. (3)-(4): received interference term uses PT - PL (Egli model).
+        - Table I: attenuation as function of spectral distance.
 
-        Returns
-        -------
-        None.
-
+        Returns:
+            np.ndarray: shape (num_users, num_channels), interference in dBm.
         """
         self.noise_matrix = np.zeros(shape = (self.number_of_users, self.optional_channels), dtype= np.float64)
         for i, user in enumerate(self.users):
@@ -144,14 +181,15 @@ class Net():
                   
                     if inter_net.net_id != self.net_id:    #interference is only with respect to different networks
                         for inter_user in inter_net.users:
-                            #   Here we calucalte interference between "user" and "inter_user" at channel "channel".
-                            #   We can make these 5 lines as a separated function.
+                            # Here we calculate interference from inter_user to user
+                            # at candidate channel `channel` (Eq. (5)-(6)).
                             LP = get_path_loss(user, inter_user, channel, channel_model)# IN dB
                             PR = inter_user.power - LP ## That is ttrue iff inter_user.power is in dB
                             attunation = get_attenuation(channel, inter_net.channel) # This is a number from a table this is in dBm
                             # print("attunation:", attunation)
                             Attunation = attunation - 30 # 10*np.log10(dbm_to_watts(attunation)) # dB
                             # print("Attunation:", Attunation)
+                            # Eq. (6): phi = PR - T(k, k_tilde)
                             intereference_dB = PR - Attunation #dB # THIS IS CURRECT ! But we get the attunation in dBm
                             # print("intereference_dB:",intereference_dB)
                             interference_W = db_to_watts(intereference_dB)
@@ -159,6 +197,7 @@ class Net():
                             user.interference[channel] += interference_W
                   
                 # print("user.interference[channel]:", user.interference[channel])
+                # Sum in Watts for physical correctness, then convert to dBm.
                 user.interference[channel] = watts_to_dbm(user.interference[channel])
                 # print("user.interference[channel]:", user.interference[channel])
                 self.noise_matrix[i,channel] =  user.interference[channel]
@@ -171,14 +210,28 @@ class Net():
                 
         
     def create_sensed_vector(self,networks, threshold = None, channel_model = 'Egli'):
-        """I am here"""
+        """Create the network's low-dimensional sensed quality vector.
+
+        Paper reference:
+        - Eq. (2): SINR = PR / (I_T + I).
+        - Eq. (7): thermal noise term I_T.
+        - Eq. (11): BSINR thresholding at target SINR*.
+        - Eq. (12): QV_k = average(BSINR over users for channel k).
+        - Section III-A: observation-space reduction to a quality vector.
+
+        Implementation note:
+        - The code uses a fixed threshold of 4 (dB-like scale) as SINR* surrogate,
+          matching the repository's training setup.
+        """
         noise_matrix = self.create_noise_matrix(networks, threshold = None, channel_model = 'Egli') #dBm
+        # Eq. (7): additive thermal noise contribution.
         thermal_noise = -134.9 # [dB]
        
         noise_matrix_in_watts = dbm_to_watts(noise_matrix) + db_to_watts(thermal_noise) # [W]
         
         # print(noise_matrix_in_watts)
         
+        # Eq. (2): SINR-like ratio in linear scale (W/W).
         snir_matrix = db_to_watts(self.pr_min) / noise_matrix_in_watts #[W]
 
         watts_to_dbm_vectorized = np.vectorize(watts_to_dbm)
@@ -192,9 +245,11 @@ class Net():
        ##################################################### 
         ## new Version 
         # print(np.max(snir_matrix), np.min(snir_matrix))
+        # Eq. (11): BSINR = 1(SINR > SINR*). Here SINR* is implemented as 4.
         noise_matrix_binary = snir_matrix > 4 # maybe we should leave it with the SNIR
         ############################################3
         
+        # Eq. (12): quality vector QV = average BSINR over users per channel.
         non_interference_vec = np.mean(noise_matrix_binary, axis = 0)
         
         if self.add_noise:
@@ -208,6 +263,16 @@ class Net():
         return non_interference_vec
    
 class python_env(object):
+    """Turn-based multi-network environment for CARLTON.
+
+    Paper reference:
+    - Section III-D, Algorithm 4: sequential decisions across networks and
+      scenario horizon that scales with number of networks.
+
+    Implementation note:
+    - This environment returns observations only. Reward is computed externally
+      in `BuildingBlocks/Coordinator.py` to implement CARLTON's two-part reward.
+    """
     def __init__(self, number_of_nets: np.int32,
                  number_of_users_in_each_net: np.array,
                  net_center_location_and_std: np.array,
@@ -242,6 +307,12 @@ class python_env(object):
             
         
     def reset(self):
+        """Start a new scenario and return initial observation/info.
+
+        Returns:
+            obs: quality vector for the first scheduled network manager.
+            info: metadata including manager id, current channel, time, location.
+        """
         self.counter_game_length = 0
         self.nets = []
         self.ids_of_all_nets = []        
@@ -274,6 +345,7 @@ class python_env(object):
             self.ids_of_all_nets.append(j)
             # print("bomm")
         
+        # Section III-D: decentralized execution with per-network turn order.
         random.shuffle(self.ids_of_all_nets)
         # print(self.ids_of_all_nets)
         self.turn_idx = 0
@@ -294,6 +366,15 @@ class python_env(object):
         return obs, info  
     
     def step(self, action , agent_id):
+        """Apply one channel-selection action and move to next network turn.
+
+        Args:
+            action: selected channel index (Section III-B action space).
+            agent_id: id of the acting network manager.
+
+        Returns:
+            next observation, placeholder reward (`None`), done flag, and info.
+        """
         self.counter_game_length += 1
         
         if self.counter_game_length >= self.max_length:
@@ -303,6 +384,7 @@ class python_env(object):
             
         net = self.nets[agent_id]
         #print("ddd", net.channel)
+        # Dynamic channel selection is executed here.
         net.define_channel(action)
         #print(action, agent_id,net.channel)
         ### call another agent
@@ -318,12 +400,13 @@ class python_env(object):
         
         obs = next_net.create_sensed_vector(self.nets) 
         
+        # Reward is computed in Coordinator (Algorithm 2/3 and Eq. (13)).
         r = None 
         return obs, r, done, info  
         
         
     def create_net(self, number_of_users, location, net_id, set_users_locations = None):
-        
+        """Factory for one network instance with randomized initial channel."""
         initial_channel = np.random.choice(self.possible_channels) # only 24 posiible 
         
         if self.training:
@@ -378,6 +461,7 @@ class python_env(object):
         # plt.savefig("env.png")
         # plt.close()
     def create_all_sensed_matrixes(self):
+        """Return sensed matrices for all networks at current simulation state."""
         # This matrix give you all the sensed matrix of all nets at t = t, same time step
         sensed_all = []
         for net in self.nets:

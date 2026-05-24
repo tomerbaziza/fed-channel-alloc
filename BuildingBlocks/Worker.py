@@ -1,17 +1,18 @@
 import os 
 from BuildingBlocks.Coordinator import coordinator
-import tensorflow as tf 
 
 def worker(address_scen, scenario, address_algo, mutex= None, training = True, 
            history_length = 1, replay_memory_size = 10000, number_of_layers= 3, 
            number_of_nodes = 128, learning_rate = 0.00025, 
-           activation_fucntion = tf.nn.leaky_relu, mellowmax_constant = 0.02,
+           activation_fucntion = None, mellowmax_constant = 0.02,
            gamma = 0.9,
            batch_size  = 64,
            dropout = False,
            l2_regularization = False,
            i_d_folder = '',
            epsilon = 0,
+           global_weights = None,
+           local_train_steps = 20,
            verbose = False):
     # activate the bat file (opnet simulation)
     # os.chdir(address_scen)
@@ -35,6 +36,8 @@ def worker(address_scen, scenario, address_algo, mutex= None, training = True,
                 l2_regularization = l2_regularization,
                 i_d_folder = i_d_folder,
                 epsilon = epsilon,
+                global_weights = global_weights,
+                local_train_steps = local_train_steps,
                 verbose = verbose)
     
     if verbose:
