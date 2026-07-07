@@ -100,7 +100,7 @@ def creat_player(number_of_actions = 30,
                  history_length = 1,
                  learning_rate= 0.00025,
                  max_experience = 10000,
-                 batch_size = 64, 
+                 batch_size = 32, 
                  sensing_window = 5,
                  number_of_layers = 3,
                  number_of_nodes = 128,
@@ -326,7 +326,7 @@ def kill_simulation(operation = "op_run"):
             print("A running simulation was found and killed!")
    
     
-def save_to_gmb(agents,  address_algo, replay_memory_size = 100000, history_length = 1, batch_size = 64,
+def save_to_gmb(agents,  address_algo, replay_memory_size = 100000, history_length = 1, batch_size = 32,
                 i_d_folder = '', number_of_channels = 30,  verbose = False):
     """Merge all local agent replay buffers into one global replay memory.
 
@@ -335,9 +335,9 @@ def save_to_gmb(agents,  address_algo, replay_memory_size = 100000, history_leng
       to a global replay memory and sampled for centralized training updates.
     """
     #address = 'C:\Aladdin\Aladdin\Algorithms\IQL_v2_for_real_simulation'
-    os.chdir(address_algo)
+    base_dir = address_algo if address_algo else os.getcwd()
     
-    global_rb_folder = "Global_RB_Storage_" + str(i_d_folder) 
+    global_rb_folder = os.path.join(base_dir, "Global_RB_Storage_" + str(i_d_folder))
     if not os.path.isdir(global_rb_folder): #"Global_RB_Storage"):
         if verbose:
             print("Creating new Global Memory Replay Buffer!")
@@ -353,7 +353,7 @@ def save_to_gmb(agents,  address_algo, replay_memory_size = 100000, history_leng
             pickle.dump(experience_replay_buffer, file)
         
     #print("hallo111")
-    path_to_folder = global_rb_folder + '/'
+    path_to_folder = global_rb_folder + os.sep
     files = os.listdir(path_to_folder)
 
     files = sorted(os.listdir(path_to_folder), key = lambda t: os.stat(path_to_folder + t).st_mtime) 

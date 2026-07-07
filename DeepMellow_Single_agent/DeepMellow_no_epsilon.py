@@ -60,7 +60,7 @@ class DeepMellow(object):
 
         self.net = net.to(self.device)
         self.loss_func = los_func if los_func is not None else nn.HuberLoss(delta=1.0)
-        self.optimizer = optimizer(self.net.parameters(), lr=lr)
+        self.optimizer = optimizer(self.net.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-7)
 
     def _flatten_state(self, x):
         # Expected shape: (B, channels_with_bits, 1, history)
@@ -119,7 +119,7 @@ class DeepMellow(object):
         out = log_i / self.w + c
         return out.squeeze(axis)
 
-    def learn(self, experience_replay_buffer, batch_size=64):
+    def learn(self, experience_replay_buffer, batch_size=64, global_ref=None, fedprox_mu=0.0):
         states, actions, rewards, next_states, dones, _ = experience_replay_buffer.get_minibatch()
         states_t = torch.as_tensor(states, dtype=torch.float32, device=self.device)
         next_states_t = torch.as_tensor(next_states, dtype=torch.float32, device=self.device)
@@ -139,6 +139,13 @@ class DeepMellow(object):
         if self.l2_regularization > 0.0:
             l2 = sum(torch.sum(p * p) for p in self.net.parameters()) / max(1, len(list(self.net.parameters())))
             loss = loss + self.l2_regularization * l2
+        if global_ref is not None and fedprox_mu > 0.0:
+            prox = torch.zeros((), dtype=torch.float32, device=self.device)
+            for name, param in self.net.named_parameters():
+                if name in global_ref:
+                    ref = global_ref[name].detach().to(self.device, dtype=param.dtype)
+                    prox = prox + torch.sum((param - ref) ** 2)
+            loss = loss + 0.5 * float(fedprox_mu) * prox
 
         self.optimizer.zero_grad()
         loss.backward()

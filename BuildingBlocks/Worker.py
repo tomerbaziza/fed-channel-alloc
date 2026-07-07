@@ -6,13 +6,17 @@ def worker(address_scen, scenario, address_algo, mutex= None, training = True,
            number_of_nodes = 128, learning_rate = 0.00025, 
            activation_fucntion = None, mellowmax_constant = 0.02,
            gamma = 0.9,
-           batch_size  = 64,
+           batch_size  = 32,
            dropout = False,
            l2_regularization = False,
            i_d_folder = '',
            epsilon = 0,
            global_weights = None,
            local_train_steps = 20,
+           fedprox_mu = 0.0,
+           persistent_replay_buffer = None,
+           save_to_global_rb = False,
+           rho = None,
            verbose = False):
     # activate the bat file (opnet simulation)
     # os.chdir(address_scen)
@@ -38,6 +42,10 @@ def worker(address_scen, scenario, address_algo, mutex= None, training = True,
                 epsilon = epsilon,
                 global_weights = global_weights,
                 local_train_steps = local_train_steps,
+                fedprox_mu = fedprox_mu,
+                persistent_replay_buffer = persistent_replay_buffer,
+                save_to_global_rb = save_to_global_rb,
+                rho=rho,
                 verbose = verbose)
     
     if verbose:

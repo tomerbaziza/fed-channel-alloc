@@ -113,6 +113,34 @@ class ReplayMemory(object):
             # print("hallo:", index)
             self.indices[i] = index
             
+    def append_from_buffer(self, other):
+        """Append all experiences from another replay buffer (e.g. one episode)."""
+        if other is None or other.count == 0:
+            return 0
+        if other.number_of_channels != self.number_of_channels:
+            raise ValueError(
+                f"Channel dimension mismatch: {other.number_of_channels} vs {self.number_of_channels}"
+            )
+        if other.agent_history_length != self.agent_history_length:
+            raise ValueError(
+                f"History length mismatch: {other.agent_history_length} vs {self.agent_history_length}"
+            )
+
+        merged = 0
+        for i in range(int(other.count)):
+            src = i % other.size
+            dst = self.current
+            self.actions[dst] = other.actions[src]
+            self.observations[dst, ...] = other.observations[src, ...]
+            self.rewards[dst] = other.rewards[src]
+            self.terminal_flags[dst] = other.terminal_flags[src]
+            self.original_decision[dst] = other.original_decision[src]
+            self.time[dst] = other.time[src]
+            self.current = (self.current + 1) % self.size
+            self.count = min(self.size, self.count + 1)
+            merged += 1
+        return merged
+
     def get_minibatch(self):
         
         if self.count < self.agent_history_length:

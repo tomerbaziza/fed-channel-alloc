@@ -1,0 +1,57 @@
+{
+  "study_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_rho1_multiseed_20260701",
+  "generated_at": "2026-07-07T11:26:10",
+  "smooth_window": 20,
+  "filters": {
+    "pytorch_min_train_reward": 70.0
+  },
+  "train": {
+    "pytorch": {
+      "n_seeds": 11,
+      "last_20_mean": 77.91345267884037,
+      "last_20_std": 2.077678657180317
+    },
+    "tf": {
+      "n_seeds": 30,
+      "last_20_mean": 78.6957310027778,
+      "last_20_std": 0.7655383380447954
+    },
+    "fedavg": {
+      "n_seeds": 30,
+      "last_20_mean": 85.98837832243755,
+      "last_20_std": 0.9757047370620859
+    },
+    "fedprox": {
+      "n_seeds": 30,
+      "last_20_mean": 86.13890577517743,
+      "last_20_std": 0.9328522387128655
+    }
+  },
+  "inference": {
+    "pytorch": {
+      "mean": 76.53264717663835,
+      "std": 4.567804716765816,
+      "n": 11
+    },
+    "tf": {
+      "mean": 78.80558598888891,
+      "std": 1.0491290694042255,
+      "n": 30
+    },
+    "fedavg": {
+      "mean": 86.30576661699774,
+      "std": 1.3932733186785273,
+      "n": 30
+    },
+    "fedprox": {
+      "mean": 86.24002328029346,
+      "std": 1.0272184026157025,
+      "n": 30
+    }
+  },
+  "plots": {
+    "reward": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_rho1_multiseed_20260701\\plots\\main_four_methods_rho1_30avg.png",
+    "channel_changes": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_rho1_multiseed_20260701\\plots\\main_four_methods_cc_rho1_30avg.png",
+    "inference": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_rho1_multiseed_20260701\\plots\\main_four_methods_inference_30avg.png"
+  }
+}

@@ -143,8 +143,10 @@ class Net():
                 lp = get_path_loss(user_1, user_2, self.channel, 'Egli') # dB
                 
                 self.pr_min =  min(user_2.power - lp, self.pr_min) # dB
-                
-        
+
+        if self.pr_min == sys.maxsize and number_of_users > 0:
+            # Single-user network: no intra-net path for pr_min (Table II allows M=1).
+            self.pr_min = float(self.users[0].power)
                 
     def calculate_distance(self,p1,p2):
         """Euclidean distance helper used for manager/neighbor selection logic."""

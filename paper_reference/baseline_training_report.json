@@ -1,0 +1,12 @@
+{
+  "completed_at": "2026-06-30T08:25:28",
+  "mode": "paper_baseline_tensorflow",
+  "repo": "Kobi-Cohen-researchlab/fed-channel-alloc",
+  "episodes": 1000,
+  "last_20_mean_reward": 71.05439333333332,
+  "last_20_mean_cc": 2.854166666666667,
+  "episode_950_reward": 72.579,
+  "episode_950_cc": 2.5,
+  "cq_mean_last20": 0.970886683620817,
+  "pct_of_paper_ceiling_88": 80.74
+}

@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Federated Learning — Comprehensive Theory Guide</title>
+  <style>
+    :root {
+      --bg: #0b0f14; --card: #151c28; --accent: #3b82f6; --accent2: #22d3ee;
+      --text: #e8edf4; --muted: #94a3b8; --border: #2d3a4f;
+      --good: #34d399; --warn: #fbbf24; --bad: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; font-size: 16px; }
+    header { text-align: center; padding: 2.5rem 1.5rem; background: linear-gradient(160deg, #1a365d, #0b0f14 70%); border-bottom: 1px solid var(--border); }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p { color: var(--muted); max-width: 720px; margin: 0 auto; }
+    nav { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; padding: 0.6rem; background: rgba(11,15,20,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+    nav a { color: var(--accent2); text-decoration: none; font-size: 0.78rem; padding: 0.3rem 0.65rem; border-radius: 999px; border: 1px solid var(--border); }
+    nav a:hover { background: var(--card); }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+    .slide { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem 2.25rem; margin-bottom: 2rem; scroll-margin-top: 3.5rem; }
+    .slide-num { display: inline-block; background: var(--accent); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 5px; margin-bottom: 0.6rem; }
+    .slide h2 { font-size: 1.55rem; margin-bottom: 0.2rem; }
+    .slide .subtitle { color: var(--muted); margin-bottom: 1rem; font-size: 0.92rem; }
+    .slide h3 { font-size: 1.08rem; margin: 1.4rem 0 0.45rem; color: var(--accent2); }
+    .slide h4 { font-size: 0.95rem; margin: 1rem 0 0.35rem; color: #a5b4fc; }
+    .slide p, .slide li { color: #cbd5e1; margin-bottom: 0.55rem; }
+    .slide ul, .slide ol { padding-left: 1.4rem; margin-bottom: 0.9rem; }
+  .slide li { margin-bottom: 0.35rem; }
+    .diagram { background: #080c10; border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin: 1rem 0; overflow-x: auto; }
+    .diagram svg { display: block; margin: 0 auto; max-width: 100%; }
+    .formula { background: #080c10; border-left: 4px solid var(--accent); padding: 0.85rem 1.1rem; margin: 0.85rem 0; font-family: Cambria, Georgia, serif; font-size: 1.02rem; overflow-x: auto; }
+    .formula.small { font-size: 0.92rem; }
+    .callout { border-radius: 10px; padding: 1rem 1.15rem; margin: 1rem 0; border: 1px solid var(--border); }
+    .callout.def { background: #0f1a2e; border-color: #3b82f6; }
+    .callout.warn { background: #1a1508; border-color: var(--warn); }
+    .callout.good { background: #0a1a14; border-color: var(--good); }
+    .callout strong { display: block; margin-bottom: 0.35rem; color: var(--text); }
+    pre.code { background: #080c10; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; color: #a5f3fc; margin: 0.85rem 0; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+    th, td { border: 1px solid var(--border); padding: 0.55rem 0.7rem; text-align: left; vertical-align: top; }
+    th { background: #080c10; color: var(--accent2); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } .slide { padding: 1.25rem; } }
+    .tag { display: inline-block; font-size: 0.68rem; padding: 0.12rem 0.45rem; border-radius: 4px; background: #1e3a5f; color: var(--accent2); margin-right: 0.3rem; }
+    .steps { counter-reset: step; list-style: none; padding-left: 0; }
+    .steps li { counter-increment: step; padding-left: 2.2rem; position: relative; margin-bottom: 0.65rem; }
+    .steps li::before { content: counter(step); position: absolute; left: 0; width: 1.6rem; height: 1.6rem; background: var(--accent); color: #fff; border-radius: 50%; text-align: center; line-height: 1.6rem; font-size: 0.75rem; font-weight: 700; }
+    footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+    .campaign-plot img { display: block; margin: 0.75rem auto; max-width: 100%; border-radius: 8px; border: 1px solid var(--border); background: #080c10; }
+    .campaign-meta { font-size: 0.88rem; color: var(--muted); margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Federated Learning — Comprehensive Theory</h1>
+  <p>A detailed visual guide to FL algorithms, mathematics, trade-offs, and how they connect to federated reinforcement learning for wireless channel allocation (CARLTON).</p>
+</header>
+
+<nav>
+  <a href="#s0">Foundations</a>
+  <a href="#s0b">Problem Setup</a>
+  <a href="#s0c">IID vs Non-IID</a>
+  <a href="#s1">FedAvg</a>
+  <a href="#s2">FedProx</a>
+  <a href="#s3">FedSGD</a>
+  <a href="#s4">FedOpt</a>
+  <a href="#s5">Personalized</a>
+  <a href="#s6">FRL</a>
+  <a href="#s7">Topologies</a>
+  <a href="#s8">Privacy</a>
+  <a href="#s9">Compare</a>
+  <a href="#s10">CARLTON</a>
+  <a href="#s11">Your World</a>
+  <a href="#s12">Code Map</a>
+  <a href="#s13">Episode Flow</a>
+  <a href="#s14">State/Action/Reward</a>
+  <a href="#s15">SINR Pipeline</a>
+  <a href="#s16">Neural Net</a>
+  <a href="#s17">FRL vs Central</a>
+  <a href="#s18">Metrics</a>
+</nav>
+
+<main>
+
+<!-- ========== FOUNDATIONS ========== -->
+<section class="slide" id="s0">
+  <span class="slide-num">PART 1</span>
+  <h2>Foundations — Why Federated Learning Exists</h2>
+  <p class="subtitle">From centralized machine learning to collaborative training without data pooling</p>
+
+  <h3>1.1 The classical (centralized) approach</h3>
+  <p>In standard machine learning, we assume a dataset <em>D = {(xᵢ, yᵢ)}</em> stored in one place. We minimize an empirical risk:</p>
+  <div class="formula">min<sub>w</sub> F(w) = (1/|D|) Σ<sub>(x,y)∈D</sub> ℓ(w; x, y)</div>
+  <p>Gradient descent (or Adam) updates <strong>w</strong> using batches sampled from the full dataset. This is simple and well-understood, but it requires:</p>
+  <ul>
+    <li>Uploading <strong>all raw data</strong> to a cloud server</li>
+    <li>High storage and bandwidth at the center</li>
+    <li>Trust that sensitive data (health, location, traffic patterns) is protected</li>
+  </ul>
+
+  <h3>1.2 The federated setting</h3>
+  <p>Data are <strong>partitioned across K clients</strong> (devices, hospitals, base stations, RL agents). Client k holds dataset Dₖ (or generates experience locally). The global objective is:</p>
+  <div class="formula">min<sub>w</sub> F(w) = Σ<sub>k=1..K</sub> (nₖ/n) · Fₖ(w), &nbsp; where &nbsp; Fₖ(w) = (1/nₖ) Σ<sub>(x,y)∈Dₖ</sub> ℓ(w; x, y), &nbsp; n = Σ nₖ</div>
+
+  <div class="callout def">
+    <strong>Core idea</strong>
+    Clients never share Dₖ. They only share <strong>model updates</strong> (gradients or weights). The server aggregates updates to improve a <strong>global model</strong> that works well on the union of all clients' distributions.
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 560 200" width="560" height="200">
+      <text x="140" y="18" fill="#94a3b8" text-anchor="middle" font-size="12" font-weight="bold">Centralized ML</text>
+      <rect x="110" y="30" width="60" height="36" rx="6" fill="#334155"/><text x="140" y="52" fill="#cbd5e1" text-anchor="middle" font-size="9">Client</text>
+      <rect x="200" y="30" width="60" height="36" rx="6" fill="#334155"/><text x="230" y="52" fill="#cbd5e1" text-anchor="middle" font-size="9">Client</text>
+      <rect x="290" y="30" width="60" height="36" rx="6" fill="#334155"/><text x="320" y="52" fill="#cbd5e1" text-anchor="middle" font-size="9">Client</text>
+      <text x="215" y="85" fill="#f87171" font-size="10">ALL raw data uploaded ↓</text>
+      <rect x="175" y="95" width="120" height="44" rx="8" fill="#7f1d1d" stroke="#f87171"/><text x="235" y="122" fill="#fff" text-anchor="middle" font-size="11">Central Server + Data Lake</text>
+
+      <text x="420" y="18" fill="#94a3b8" text-anchor="middle" font-size="12" font-weight="bold">Federated Learning</text>
+      <rect x="390" y="30" width="60" height="36" rx="6" fill="#334155"/><text x="420" y="52" fill="#cbd5e1" text-anchor="middle" font-size="9">Client</text>
+      <rect x="480" y="30" width="60" height="36" rx="6" fill="#334155"/><text x="510" y="52" fill="#cbd5e1" text-anchor="middle" font-size="9">Client</text>
+      <text x="420" y="78" fill="#cbd5e1" font-size="8" text-anchor="middle">data stays here</text>
+      <text x="510" y="78" fill="#cbd5e1" font-size="8" text-anchor="middle">data stays here</text>
+      <line x1="420" y1="66" x2="455" y2="100" stroke="#34d399" stroke-width="2"/><text x="430" y="88" fill="#34d399" font-size="8">weights only</text>
+      <line x1="510" y1="66" x2="475" y2="100" stroke="#34d399" stroke-width="2"/>
+      <rect x="430" y="100" width="70" height="40" rx="8" fill="#1e3a5f" stroke="#22d3ee"/><text x="465" y="125" fill="#fff" text-anchor="middle" font-size="10">Aggregator</text>
+      <line x1="465" y1="100" x2="420" y2="66" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 2"/>
+      <line x1="465" y1="100" x2="510" y2="66" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 2"/>
+      <text x="465" y="88" fill="#3b82f6" font-size="8" text-anchor="middle">broadcast w</text>
+
+      <text x="280" y="175" fill="#64748b" text-anchor="middle" font-size="11">FL optimizes the same global objective F(w) but without centralizing D</text>
+    </svg>
+  </div>
+
+  <h3>1.3 Why FL matters for wireless &amp; CARLTON</h3>
+  <ul>
+    <li><strong>Privacy / regulation:</strong> Network topology, user locations, and traffic are sensitive — they should not leave each operator.</li>
+    <li><strong>Scale:</strong> Many independent network managers (agents) can contribute learning signal without one giant replay buffer.</li>
+    <li><strong>Bandwidth:</strong> Sending neural network weights (MB scale) is cheaper than sending full SINR traces or raw spectrum data (GB scale).</li>
+    <li><strong>Your project:</strong> Each network manager trains on local episodes; <code>federated_averaging()</code> merges Q-network weights into one global policy.</li>
+  </ul>
+</section>
+
+<section class="slide" id="s0b">
+  <span class="slide-num">PART 2</span>
+  <h2>Formal Problem Setup &amp; Communication Round</h2>
+  <p class="subtitle">Notation used throughout this guide</p>
+
+  <table>
+    <tr><th>Symbol</th><th>Meaning</th></tr>
+    <tr><td>K</td><td>Number of clients participating in a round</td></tr>
+    <tr><td>w</td><td>Global model parameters (weights)</td></tr>
+    <tr><td>wₖ</td><td>Local model at client k after local training</td></tr>
+    <tr><td>nₖ</td><td>Number of samples (or episodes) at client k</td></tr>
+    <tr><td>E</td><td>Number of local epochs per round (FedAvg)</td></tr>
+    <tr><td>T</td><td>Total communication rounds</td></tr>
+    <tr><td>ℓ(w; x, y)</td><td>Loss on one supervised example</td></tr>
+  </table>
+
+  <h3>Generic federated round (synchronous)</h3>
+  <ol class="steps">
+    <li><strong>Client selection:</strong> Server chooses subset S ⊆ {1,…,K} (may be all clients).</li>
+    <li><strong>Broadcast:</strong> Send current global weights w<sup>t</sup> to each selected client.</li>
+    <li><strong>Local computation:</strong> Each client k runs LOCALTRAIN(w<sup>t</sup>, Dₖ) for E epochs → produces wₖ<sup>t+1</sup>.</li>
+    <li><strong>Upload:</strong> Clients send wₖ<sup>t+1</sup> (or gradients) to server.</li>
+    <li><strong>Aggregation:</strong> Server computes w<sup>t+1</sup> = AGGREGATE({wₖ}).</li>
+  </ol>
+
+  <div class="callout warn">
+    <strong>Communication vs computation</strong>
+    Each round has a <em>wall-clock cost</em> = (time to download w) + (local training) + (time to upload update). FedAvg reduces <strong>number of rounds</strong> by doing more local work E, but too much local work causes <strong>client drift</strong> (especially under Non-IID data).
+  </div>
+
+  <h3>Convergence intuition (simplified)</h3>
+  <p>Under IID data and convex loss, FedAvg with enough rounds approaches the same minimum as centralized SGD. Under <strong>Non-IID</strong> data, local objectives Fₖ point in different directions — averaging their minimizers can be far from any client's optimum or the true global optimum. That is why FedProx, FedOpt, and personalization exist.</p>
+</section>
+
+<section class="slide" id="s0c">
+  <span class="slide-num">PART 3</span>
+  <h2>IID vs Non-IID Data — The Central Challenge</h2>
+  <p class="subtitle">Understanding heterogeneity is key to choosing an FL algorithm</p>
+
+  <div class="grid-2">
+    <div class="callout good">
+      <strong>IID (Independent &amp; Identically Distributed)</strong>
+      Each client's data is drawn from the <em>same</em> distribution P(X,Y). Splitting a shuffled dataset across clients simulates IID. FedAvg works well.
+    </div>
+    <div class="callout warn">
+      <strong>Non-IID (Heterogeneous)</strong>
+      Each client sees a <em>different</em> distribution Pₖ(X,Y). Examples: one client has only cats, another only dogs; one cell tower sees urban interference, another rural.
+    </div>
+  </div>
+
+  <h3>Common types of Non-IID</h3>
+  <table>
+    <tr><th>Type</th><th>Description</th><th>Wireless / CARLTON example</th></tr>
+    <tr><td><strong>Label skew</strong></td><td>Different class proportions per client</td><td>Some networks mostly see high-SINR channels, others mostly congested</td></tr>
+    <tr><td><strong>Feature skew</strong></td><td>Same labels, different input distributions</td><td>Same channel index means different QV patterns in different geographies</td></tr>
+    <tr><td><strong>Quantity skew</strong></td><td>Very different nₖ per client</td><td>2-user vs 15-user networks; uneven episode counts</td></tr>
+    <tr><td><strong>Concept drift</strong></td><td>P changes over time</td><td>Other networks switch channels → interference landscape shifts during training</td></tr>
+  </table>
+
+  <div class="diagram">
+    <svg viewBox="0 0 500 140" width="500" height="140">
+      <text x="125" y="20" fill="#34d399" text-anchor="middle" font-size="11">IID: gradients align</text>
+      <line x1="60" y1="80" x2="120" y2="50" stroke="#34d399" stroke-width="3" marker-end="url(#ar)"/>
+      <line x1="190" y1="80" x2="130" y2="50" stroke="#34d399" stroke-width="3" marker-end="url(#ar)"/>
+      <circle cx="125" cy="90" r="6" fill="#22d3ee"/>
+      <text x="125" y="115" fill="#94a3b8" text-anchor="middle" font-size="9">good average direction</text>
+      <text x="375" y="20" fill="#f87171" text-anchor="middle" font-size="11">Non-IID: gradients conflict</text>
+      <line x1="310" y1="80" x2="350" y2="40" stroke="#f87171" stroke-width="3" marker-end="url(#ar)"/>
+      <line x1="440" y1="80" x2="400" y2="110" stroke="#f87171" stroke-width="3" marker-end="url(#ar)"/>
+      <circle cx="375" cy="90" r="6" fill="#22d3ee"/>
+      <text x="375" y="130" fill="#94a3b8" text-anchor="middle" font-size="9">average may be weak or wrong</text>
+      <defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#34d399"/></marker></defs>
+    </svg>
+  </div>
+</section>
+
+<!-- ========== FEDAVG ========== -->
+<section class="slide" id="s1">
+  <span class="slide-num">ALGORITHM 1</span>
+  <h2>FedAvg — Federated Averaging</h2>
+  <p class="subtitle"><span class="tag">McMahan et al., 2017</span> <span class="tag">Most widely used</span> <span class="tag">Used in your repo</span></p>
+
+  <h3>2.1 Motivation</h3>
+  <p>FedAvg was designed for mobile devices that generate data locally (keyboard predictions, etc.). Instead of uploading gradients every mini-batch (expensive), each device runs <strong>multiple epochs</strong> of SGD locally, then uploads only the <strong>final weights</strong>. The server averages them proportionally to dataset size.</p>
+
+  <h3>2.2 Algorithm (detailed)</h3>
+  <pre class="code">Server initializes w⁰
+for each round t = 0, 1, 2, …, T−1:
+    Select clients Sₜ ⊆ {1,…,K}
+    for each client k ∈ Sₜ in parallel:
+        wₖ ← wᵗ                          # download global model
+        for epoch e = 1 … E:               # local training
+            for batch B from Dₖ:
+                wₖ ← wₖ − η ∇ℓ(wₖ; B)     # SGD step
+        upload wₖ to server
+    wᵗ⁺¹ ← Σₖ (nₖ / Σⱼ nⱼ) · wₖ         # weighted average</pre>
+
+  <div class="formula">w<sup>t+1</sup> = Σ<sub>k∈Sₜ</sub> (nₖ / Σ<sub>j∈Sₜ</sub> nⱼ) · w<sub>k</sub><sup>t+1</sup></div>
+
+  <h3>2.3 Why weighted averaging?</h3>
+  <p>If client A has 10,000 samples and client B has 100, A's model should influence the global average more — it is a better estimate of the global loss landscape. With uniform averaging, a tiny client can disproportionately pull the global model.</p>
+
+  <h3>2.4 Communication cost analysis</h3>
+  <p>Let |w| = number of parameters (e.g. 50,000 floats ≈ 200 KB). One FedAvg round uploads K × |w| and downloads K × |w|. With E local epochs, you trade <strong>fewer rounds</strong> for <strong>more compute per round</strong>. Rule of thumb:</p>
+  <ul>
+    <li><strong>Large E</strong> → less communication, more client drift risk</li>
+    <li><strong>Small E (=1)</strong> → behaves like FedSGD, more communication, less drift</li>
+  </ul>
+
+  <h3>2.5 Strengths &amp; limitations</h3>
+  <div class="grid-2">
+    <div class="callout good">
+      <strong>Strengths</strong>
+      <ul>
+        <li>Extremely simple to implement</li>
+        <li>Strong baseline when data is roughly IID</li>
+        <li>Reduces communication vs per-step gradient upload</li>
+        <li>Maps directly to PyTorch <code>state_dict()</code> averaging</li>
+      </ul>
+    </div>
+    <div class="callout warn">
+      <strong>Limitations</strong>
+      <ul>
+        <li>Client drift under Non-IID — local wₖ diverge from wᵗ</li>
+        <li>Synchronous rounds blocked by slowest client (straggler)</li>
+        <li>No built-in privacy — weights can leak training data</li>
+        <li>Assumes all clients run same model architecture</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>2.6 Your implementation</h3>
+  <p>In <code>BuildingBlocks/TrainBlock.py</code>, <code>federated_averaging()</code> stacks each tensor in the state dict and computes element-wise mean across agents. After 1000 rounds, checkpoints are saved in <code>Train_weights_frl/</code>.</p>
+</section>
+
+<!-- ========== FEDPROX ========== -->
+<section class="slide" id="s2">
+  <span class="slide-num">ALGORITHM 2</span>
+  <h2>FedProx — Federated Optimization with Proximal Term</h2>
+  <p class="subtitle"><span class="tag">Li et al., 2020</span> <span class="tag">Handles heterogeneity</span></p>
+
+  <h3>3.1 Motivation</h3>
+  <p>When clients have Non-IID data, local training in FedAvg can push wₖ far from the global wᵗ. The averaged result may perform poorly for everyone. FedProx adds a <strong>proximal penalty</strong> that keeps local solutions close to the broadcast global model.</p>
+
+  <h3>3.2 Local objective</h3>
+  <div class="formula">min<sub>w</sub> Fₖ(w) + (μ/2) · ‖w − w<sup>t</sup>‖²</div>
+  <p>μ ≥ 0 controls strength of the penalty:</p>
+  <ul>
+    <li><strong>μ = 0</strong> → reduces to FedAvg local objective</li>
+    <li><strong>μ large</strong> → local model barely moves from wᵗ (very conservative)</li>
+    <li><strong>μ tuned</strong> → balance between fitting local data and global consistency</li>
+  </ul>
+
+  <h3>3.3 Intuition: rubber band model</h3>
+  <p>Think of wᵗ as an anchor. Each client explores its local loss landscape but is pulled back toward the anchor. This reduces conflicting updates when gradients point in different directions (Non-IID).</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 420 170" width="420" height="170">
+      <ellipse cx="210" cy="85" rx="120" ry="60" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="210" y="35" fill="#3b82f6" text-anchor="middle" font-size="10">feasible region near global w</text>
+      <circle cx="210" cy="85" r="9" fill="#22d3ee"/><text x="210" y="108" fill="#22d3ee" text-anchor="middle" font-size="10">wᵗ (anchor)</text>
+      <circle cx="300" cy="55" r="8" fill="#f87171"/><text x="310" y="50" fill="#f87171" font-size="9">FedAvg drift</text>
+      <circle cx="240" cy="78" r="7" fill="#34d399"/><text x="255" y="75" fill="#34d399" font-size="9">FedProx</text>
+      <line x1="210" y1="85" x2="295" y2="58" stroke="#f87171" stroke-width="2"/>
+      <line x1="210" y1="85" x2="238" y2="78" stroke="#34d399" stroke-width="2"/>
+      <text x="210" y="155" fill="#94a3b8" text-anchor="middle" font-size="10">μ limits how far local training can wander per round</text>
+    </svg>
+  </div>
+
+  <h3>3.4 When to use FedProx</h3>
+  <ul>
+    <li>Clients have clearly different data distributions (label/feature skew)</li>
+    <li>FedAvg training loss oscillates or diverges</li>
+    <li>Wireless: networks in different regions with different interference profiles</li>
+  </ul>
+
+  <h3>3.5 Partial participation</h3>
+  <p>FedProx theory also supports clients dropping offline mid-round — only a fraction C of K clients participate. The proximal term stabilizes training when participation is sporadic (common on mobile networks).</p>
+</section>
+
+<!-- ========== FEDSGD ========== -->
+<section class="slide" id="s3">
+  <span class="slide-num">ALGORITHM 3</span>
+  <h2>FedSGD — Federated Stochastic Gradient Descent</h2>
+  <p class="subtitle">One gradient step per client per round — closest to centralized SGD</p>
+
+  <h3>4.1 How it differs from FedAvg</h3>
+  <table>
+    <tr><th>Aspect</th><th>FedSGD</th><th>FedAvg</th></tr>
+    <tr><td>Local work</td><td>Compute gradient on <strong>one batch</strong> (or full local set once)</td><td>Run <strong>E epochs</strong> over full Dₖ</td></tr>
+    <tr><td>Upload</td><td>Gradient gₖ = ∇Fₖ(wᵗ) or Δwₖ</td><td>Full weight vector wₖ after local training</td></tr>
+    <tr><td>Server update</td><td>wᵗ⁺¹ = wᵗ − η Σ (nₖ/n) gₖ</td><td>wᵗ⁺¹ = Σ (nₖ/n) wₖ</td></tr>
+    <tr><td>Communication rounds</td><td>Typically <strong>more</strong> rounds needed</td><td>Fewer rounds, heavier local compute</td></tr>
+    <tr><td>Client drift</td><td><strong>Lower</strong> — no deep local training</td><td><strong>Higher</strong> when E is large</td></tr>
+  </table>
+
+  <h3>4.2 Mathematical update</h3>
+  <div class="formula">w<sup>t+1</sup> = w<sup>t</sup> − η<sub>g</sub> · Σ<sub>k</sub> (nₖ/n) · ∇Fₖ(w<sup>t</sup>)</div>
+  <p>This is equivalent to one step of centralized SGD if you could access all data — but each client only computes its part of the gradient.</p>
+
+  <h3>4.3 When FedSGD is preferred</h3>
+  <ul>
+    <li>You want behavior as close as possible to centralized training</li>
+    <li>Local datasets are small — little benefit from multiple epochs</li>
+    <li>Non-IID is severe and FedAvg drifts too much even with small E</li>
+    <li>Communication is cheap relative to local compute (uncommon on wireless)</li>
+  </ul>
+
+  <div class="callout def">
+    <strong>Relation to your FRL project</strong>
+    Your agents run <code>local_train_steps=10</code> per round before upload — this is closer to <em>FedAvg-style</em> local training than FedSGD's single-step model. Increasing local steps increases drift risk but improves sample efficiency per round.
+  </div>
+</section>
+
+<!-- ========== FEDOPT ========== -->
+<section class="slide" id="s4">
+  <span class="slide-num">ALGORITHM 4</span>
+  <h2>FedOpt — Adaptive Federated Optimization</h2>
+  <p class="subtitle"><span class="tag">Reddi et al., 2021</span> FedAdam · FedAdagrad · FedYogi</p>
+
+  <h3>5.1 Motivation</h3>
+  <p>FedAvg treats the average of client weights as the new global model directly. But if client updates are noisy, conflicting, or of varying magnitude, a plain average may oscillate. <strong>FedOpt</strong> separates roles:</p>
+  <ul>
+    <li><strong>Clients:</strong> compute local updates (like FedAvg)</li>
+    <li><strong>Server:</strong> maintains an optimizer state (momentum, adaptive learning rates) and applies it to pseudo-gradients</li>
+  </ul>
+
+  <h3>5.2 FedAdam server update (conceptual)</h3>
+  <p>Define pseudo-gradient at round t:</p>
+  <div class="formula">Δ<sup>t</sup> = w<sup>t</sup> − Σ<sub>k</sub> (nₖ/n) w<sub>k</sub><sup>t+1</sup></div>
+  <p>Then apply Adam at the server (with moment estimates m, v):</p>
+  <div class="formula small">m ← β₁m + (1−β₁)Δ<sup>t</sup> &nbsp;&nbsp; v ← β₂v + (1−β₂)(Δ<sup>t</sup>)² &nbsp;&nbsp; w<sup>t+1</sup> ← w<sup>t</sup> − η · m / (√v + ε)</div>
+
+  <h3>5.3 Why this helps</h3>
+  <ul>
+    <li><strong>Momentum</strong> smooths noisy client contributions across rounds</li>
+    <li><strong>Adaptive η</strong> per parameter — some weights need larger/smaller effective steps</li>
+    <li>Better convergence on <strong>Non-IID</strong> benchmarks than FedAvg in many papers</li>
+  </ul>
+
+  <h3>5.4 Cost</h3>
+  <p>Server must store optimizer state (2× model size for Adam). Clients unchanged. Slightly more complex implementation than FedAvg.</p>
+</section>
+
+<!-- ========== PERSONALIZED ========== -->
+<section class="slide" id="s5">
+  <span class="slide-num">ALGORITHM 5</span>
+  <h2>Personalized Federated Learning</h2>
+  <p class="subtitle">One global model may not fit all clients — learn shared + private components</p>
+
+  <h3>6.1 The problem with a single global model</h3>
+  <p>Under strong Non-IID, the global w that minimizes Σ (nₖ/n)Fₖ(w) may be a compromise that works <em>mediocrely</em> for everyone but <em>optimally</em> for no one. Personalization asks: can we learn a <strong>shared representation</strong> plus <strong>client-specific heads</strong>?</p>
+
+  <h3>6.2 Common architectures</h3>
+  <table>
+    <tr><th>Approach</th><th>What is federated</th><th>What stays local</th></tr>
+    <tr><td><strong>Fine-tuning</strong></td><td>Global w → each client fine-tunes locally</td><td>Final personalized layers</td></tr>
+    <tr><td><strong>Split learning</strong></td><td>Base layers (feature extractor)</td><td>Classification / policy head per client</td></tr>
+    <tr><td><strong>Meta-learning (e.g. Per-FedAvg)</strong></td><td>Meta-parameters for fast adaptation</td><td>Inner-loop local adaptation</td></tr>
+    <tr><td><strong>Clustered FL</strong></td><td>Multiple cluster models</td><td>Client assigned to nearest cluster</td></tr>
+  </table>
+
+  <h3>6.3 Wireless example</h3>
+  <p>In CARLTON-style channel allocation:</p>
+  <ul>
+    <li><strong>Shared:</strong> general Q-value patterns for "good vs bad" channels under ICI</li>
+    <li><strong>Personal:</strong> bias toward channels that work in a specific city, user density, or neighbor topology</li>
+  </ul>
+  <p>Your current FRL uses one global Q-network for all agents — personalization would mean federating only early ResNet layers and keeping a small per-network head local.</p>
+</section>
+
+<!-- ========== FRL ========== -->
+<section class="slide" id="s6">
+  <span class="slide-num">ALGORITHM 6</span>
+  <h2>Federated Reinforcement Learning (FRL)</h2>
+  <p class="subtitle">Extending FL to agents that learn from environment interaction, not fixed datasets</p>
+
+  <h3>7.1 Supervised FL vs FRL</h3>
+  <table>
+    <tr><th></th><th>Supervised FL</th><th>Federated RL (your project)</th></tr>
+    <tr><td>Local data</td><td>Fixed dataset Dₖ of (x, y) pairs</td><td>Trajectories from environment interaction</td></tr>
+    <tr><td>Data storage</td><td>Static files</td><td><strong>Replay buffer</strong> — grows during training</td></tr>
+    <tr><td>Objective</td><td>Minimize prediction loss</td><td>Maximize expected cumulative reward</td></tr>
+    <tr><td>Non-stationarity</td><td>Mostly static Dₖ</td><td><strong>High</strong> — other agents change policy → environment shifts</td></tr>
+    <tr><td>Typical algorithm</td><td>FedAvg on SGD</td><td>FedAvg on DQN / DeepMellow updates</td></tr>
+  </table>
+
+  <h3>7.2 FRL round in your codebase</h3>
+  <ol class="steps">
+    <li><code>main_v3.py</code> samples a random wireless scenario (N networks, user locations).</li>
+    <li>Global weights broadcast to all network-manager agents via <code>global_weights</code>.</li>
+    <li><code>Coordinator</code> runs turn-based episodes: SINR sensing → state → action → reward.</li>
+    <li>Transitions stored in <strong>local</strong> <code>ReplayMemory</code> per agent.</li>
+    <li>Each agent runs <code>local_train_steps</code> × <code>learn()</code> (DeepMellow + MellowMax).</li>
+    <li><code>federated_averaging()</code> merges all <code>state_dict()</code> tensors.</li>
+  </ol>
+
+  <h3>7.3 CARLTON paper (CTDE) vs your FRL</h3>
+  <table>
+    <tr><th>Component</th><th>CARLTON paper (arXiv:2402.17773)</th><th>Your implementation</th></tr>
+    <tr><td>Paradigm</td><td><strong>CTDE</strong> — Centralized Training, Decentralized Execution</td><td><strong>FRL</strong> — Federated Training, Decentralized Execution</td></tr>
+    <tr><td>Replay</td><td>Local buffers → merged into <strong>Global Replay Memory</strong> (10⁵ transitions)</td><td><strong>Private</strong> buffer per agent; no central merge</td></tr>
+    <tr><td>Weight update</td><td>Centralized Adam on samples from GRM</td><td>FedAvg of local weights after local SGD</td></tr>
+    <tr><td>Episodes</td><td>B = 1000</td><td>1000 communication rounds ✓</td></tr>
+    <tr><td>Reward ρ</td><td>0.7 personal / 0.3 social</td><td>0.6 / 0.4 in code</td></tr>
+    <tr><td>Learner</td><td>DeepMellow + MellowMax + masking</td><td>Same algorithm, PyTorch port ✓</td></tr>
+  </table>
+
+  <h3>7.4 Unique FRL challenges</h3>
+  <ul>
+    <li><strong>Non-stationarity:</strong> As federated policy improves, transition distributions change — violates classic IID assumptions for replay sampling.</li>
+    <li><strong>Multi-agent coupling:</strong> In CARLTON, one network's channel choice changes SINR for neighbors — each agent's "environment" includes others.</li>
+    <li><strong>Sparse rewards:</strong> Personal + social welfare reward is engineered (Algorithms 2–3 in paper), not raw SINR.</li>
+    <li><strong>Partial observability:</strong> Each manager sees only its QV vector (POMDP), not full global state.</li>
+  </ul>
+
+  <div class="callout good">
+    <strong>Your 1000-round training result (summary)</strong>
+  Mean reward ≈ 50 (56% of paper's perfect-game ceiling 88). Channel changes dropped from ~14 in early rounds to ~2 in late rounds — consistent with learning stability, though paper metrics (WS, min_CQ) still need full 420-game eval for fair comparison.
+  </div>
+</section>
+
+<!-- ========== TOPOLOGIES ========== -->
+<section class="slide" id="s7">
+  <span class="slide-num">PART 4</span>
+  <h2>Communication Topologies &amp; Sync Models</h2>
+
+  <h3>8.1 Star topology (default)</h3>
+  <p>All clients talk only to a central aggregator. Used in FedAvg, your <code>main_v3.py</code>. Simple, but the server is a single point of failure and a bandwidth bottleneck.</p>
+
+  <h3>8.2 Hierarchical (edge-cloud)</h3>
+  <p>Clients → edge servers (per region) → cloud. Reduces latency for local clusters. Useful when network managers are grouped geographically (e.g. per city).</p>
+
+  <h3>8.3 Peer-to-peer / gossip</h3>
+  <p>Clients exchange weights with neighbors without a central server. More robust, harder to analyze convergence. Rare in industrial FL today.</p>
+
+  <h3>8.4 Synchronous vs asynchronous</h3>
+  <table>
+    <tr><th>Mode</th><th>Behavior</th><th>Pros</th><th>Cons</th></tr>
+    <tr><td><strong>Synchronous</strong></td><td>Server waits for all selected clients before aggregating</td><td>Stable, easier theory</td><td>Stragglers delay everyone</td></tr>
+    <tr><td><strong>Asynchronous</strong></td><td>Server updates whenever any client uploads</td><td>No waiting for slow clients</td><td>Stale gradients, harder convergence proofs</td></tr>
+  </table>
+</section>
+
+<!-- ========== PRIVACY ========== -->
+<section class="slide" id="s8">
+  <span class="slide-num">PART 5</span>
+  <h2>Privacy, Security &amp; Robustness (Overview)</h2>
+  <p class="subtitle">FedAvg alone does NOT guarantee privacy</p>
+
+  <h3>9.1 Threat model</h3>
+  <ul>
+    <li><strong>Honest-but-curious server:</strong> Follows protocol but tries to infer private data from uploaded weights</li>
+    <li><strong>Malicious client:</strong> Sends poisoned updates to corrupt global model (backdoor attack)</li>
+  </ul>
+
+  <h3>9.2 Mitigations</h3>
+  <table>
+    <tr><th>Technique</th><th>What it does</th></tr>
+    <tr><td><strong>Differential Privacy (DP)</strong></td><td>Add noise to gradients/weights before upload — provable privacy budget ε</td></tr>
+    <tr><td><strong>Secure Aggregation</strong></td><td>Server learns only sum of updates, not individual client contributions</td></tr>
+    <tr><td><strong>Byzantine-robust aggregation</strong></td><td>Median, trimmed mean instead of plain average — resists outlier clients</td></tr>
+    <tr><td><strong>Homomorphic encryption</strong></td><td>Aggregate encrypted updates — highest cost, strongest guarantees</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <strong>Important</strong>
+    "Data never leaves the device" ≠ "Privacy is guaranteed." Model updates can still leak membership or properties of training data (membership inference attacks). For production wireless deployments, DP or secure aggregation should be considered.
+  </div>
+</section>
+
+<!-- ========== COMPARE ========== -->
+<section class="slide" id="s9">
+  <span class="slide-num">PART 6</span>
+  <h2>Master Comparison — Which Algorithm When?</h2>
+
+  <table>
+    <tr>
+      <th>Method</th><th>Local objective</th><th>Server update</th><th>Best when</th><th>Avoid when</th>
+    </tr>
+    <tr>
+      <td><strong>FedAvg</strong></td>
+      <td>Min Fₖ(w), E epochs</td>
+      <td>Weighted avg of wₖ</td>
+      <td>IID or mild heterogeneity; baseline</td>
+      <td>Severe Non-IID, no tuning</td>
+    </tr>
+    <tr>
+      <td><strong>FedProx</strong></td>
+      <td>Fₖ(w) + (μ/2)‖w−wᵗ‖²</td>
+      <td>Weighted avg of wₖ</td>
+      <td>Strong Non-IID, partial participation</td>
+      <td>μ hard to tune; adds hyperparameter</td>
+    </tr>
+    <tr>
+      <td><strong>FedSGD</strong></td>
+      <td>One gradient step</td>
+      <td>w − η Σ gₖ</td>
+      <td>Match centralized SGD; small local data</td>
+      <td>High communication cost</td>
+    </tr>
+    <tr>
+      <td><strong>FedOpt</strong></td>
+      <td>Like FedAvg locally</td>
+      <td>Adam/Adagrad on Δ</td>
+      <td>FedAvg unstable; noisy clients</td>
+      <td>Server memory 2–3× model size</td>
+    </tr>
+    <tr>
+      <td><strong>Personalized</strong></td>
+      <td>Local head + shared base</td>
+      <td>Avg shared layers only</td>
+      <td>Per-client optima differ strongly</td>
+      <td>Need clear shared structure</td>
+    </tr>
+    <tr>
+      <td><strong>FRL + FedAvg</strong></td>
+      <td>RL loss on local replay</td>
+      <td>Avg policy weights</td>
+      <td>Multi-agent RL, wireless DCA</td>
+      <td>Non-stationary coupled envs</td>
+    </tr>
+  </table>
+
+  <h3>Decision flowchart (text)</h3>
+  <pre class="code">Is data supervised and roughly IID?
+  YES → start with FedAvg
+  NO  → Is heterogeneity severe?
+          YES → try FedProx (tune μ) or Personalized FL
+          NO  → Is FedAvg unstable / slow?
+                  YES → try FedOpt (FedAdam)
+                  NO  → stay with FedAvg
+
+Is problem RL (no fixed dataset)?
+  YES → FRL: local replay + FedAvg (or FedProx on local RL loss)
+        Watch for non-stationarity and multi-agent coupling</pre>
+</section>
+
+<!-- ========== CARLTON LINK ========== -->
+<section class="slide" id="s10">
+  <span class="slide-num">PART 7</span>
+  <h2>Mapping Theory to Your CARLTON Project</h2>
+
+  <h3>10.1 What you implemented</h3>
+  <ul>
+    <li><strong>Algorithm class:</strong> FRL with synchronous FedAvg</li>
+    <li><strong>Learner:</strong> DeepMellow (MellowMax backup, action masking, Huber loss)</li>
+    <li><strong>State:</strong> concatenate(CBR, QV) — Eq. 17 in paper</li>
+    <li><strong>Reward:</strong> 0.6·r_personal + 0.4·r_social — Eq. 13 variant</li>
+    <li><strong>Training:</strong> 1000 federated rounds, checkpoints every 50 rounds</li>
+  </ul>
+
+  <h3>10.2 Suggested improvements (theory-driven)</h3>
+  <table>
+    <tr><th>Issue</th><th>FL technique to try</th></tr>
+    <tr><td>Non-IID across network scenarios</td><td>FedProx on local DeepMellow loss</td></tr>
+    <tr><td>Slow / unstable convergence</td><td>FedAdam at aggregator</td></tr>
+    <tr><td>One global policy fits poorly per region</td><td>Personalized head per network manager</td></tr>
+    <tr><td>Match paper evaluation</td><td>420-game eval, ρ=0.7, paper metrics (WS, min_CQ)</td></tr>
+    <tr><td>Privacy for real deployment</td><td>DP noise on uploaded weights</td></tr>
+  </table>
+
+  <h3>10.3 Further reading in this repo</h3>
+  <ul>
+    <li><code>paper_reference/CARLTON_paper_results.md</code> — paper benchmarks &amp; comparison template</li>
+    <li><code>paper_reference/comparison_frl_vs_paper.md</code> — your run vs paper</li>
+    <li><code>README.md</code> — architecture and run instructions</li>
+  </ul>
+</section>
+
+<!-- ========== YOUR ENVIRONMENT ========== -->
+<section class="slide" id="s11">
+  <span class="slide-num">PART 8</span>
+  <h2>Your Simulation World — What Is Being Modeled?</h2>
+  <p class="subtitle">The wireless scenario that <code>python_env</code> simulates in every training round</p>
+
+  <h3>11.1 Physical setup</h3>
+  <p>Each training round builds a <strong>random multi-network scenario</strong> on a 2D map (UTM-like coordinates in meters). The world contains:</p>
+  <ul>
+    <li><strong>Networks (nets):</strong> 2–7 independent local networks per round (<code>main_v3.py</code>: <code>min_nets=2</code>, <code>max_nets=7</code>)</li>
+    <li><strong>Users per network:</strong> 2–21 users, drawn uniformly per net (<code>RandomLocationOfNetworks.py</code>)</li>
+    <li><strong>Channels:</strong> 10 non-orthogonal spectrum channels (indices 0–9). Each network operates on <em>one</em> channel at a time</li>
+    <li><strong>Transmit power:</strong> 32 dBm per user (stored as 2 dB in code after −30 offset)</li>
+    <li><strong>Path loss:</strong> Egli model (<code>SimulationEnvironments/Egli.py</code>) — distance + frequency dependent</li>
+    <li><strong>Spectral leakage:</strong> Adjacent channels interfere via attenuation table (<code>get_attenuation</code>)</li>
+  </ul>
+
+  <div class="diagram">
+    <svg viewBox="0 0 560 280" width="560" height="280">
+      <text x="280" y="22" fill="#94a3b8" text-anchor="middle" font-size="12" font-weight="bold">One scenario: multiple coexisting networks</text>
+      <!-- Net 0 -->
+      <ellipse cx="120" cy="100" rx="55" ry="40" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="120" y="55" fill="#3b82f6" text-anchor="middle" font-size="10">Net 0 (ch=3)</text>
+      <circle cx="100" cy="95" r="5" fill="#22d3ee"/><circle cx="125" cy="88" r="5" fill="#22d3ee"/><circle cx="140" cy="108" r="5" fill="#22d3ee"/>
+      <text x="120" y="155" fill="#64748b" text-anchor="middle" font-size="8">users (dots)</text>
+      <!-- Net 1 -->
+      <ellipse cx="320" cy="130" rx="50" ry="38" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="320" y="80" fill="#34d399" text-anchor="middle" font-size="10">Net 1 (ch=7)</text>
+      <circle cx="305" cy="125" r="5" fill="#22d3ee"/><circle cx="330" cy="118" r="5" fill="#22d3ee"/><circle cx="345" cy="140" r="5" fill="#22d3ee"/>
+      <!-- Net 2 -->
+      <ellipse cx="450" cy="200" rx="45" ry="35" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="450" y="155" fill="#fbbf24" text-anchor="middle" font-size="10">Net 2 (ch=3)</text>
+      <circle cx="435" cy="195" r="5" fill="#22d3ee"/><circle cx="460" cy="188" r="5" fill="#22d3ee"/>
+      <!-- Interference arrow -->
+      <line x1="165" y1="105" x2="270" y2="125" stroke="#f87171" stroke-width="2" marker-end="url(#arr2)"/>
+      <text x="215" y="108" fill="#f87171" font-size="9" text-anchor="middle">ICI if same/near channel</text>
+      <line x1="365" y1="145" x2="410" y2="185" stroke="#f87171" stroke-width="2" marker-end="url(#arr2)"/>
+      <!-- Spectrum bar -->
+      <rect x="80" y="220" width="400" height="28" rx="4" fill="#1e293b" stroke="#475569"/>
+      <text x="90" y="238" fill="#64748b" font-size="9">ch0</text>
+      <rect x="110" y="224" width="32" height="20" fill="#334155"/><rect x="150" y="224" width="32" height="20" fill="#334155"/>
+      <rect x="190" y="224" width="32" height="20" fill="#3b82f6"/><text x="206" y="238" fill="#fff" font-size="8" text-anchor="middle">3</text>
+      <rect x="230" y="224" width="32" height="20" fill="#334155"/><rect x="270" y="224" width="32" height="20" fill="#334155"/>
+      <rect x="310" y="224" width="32" height="20" fill="#334155"/><rect x="350" y="224" width="32" height="20" fill="#34d399"/>
+      <text x="366" y="238" fill="#fff" font-size="8" text-anchor="middle">7</text>
+      <rect x="390" y="224" width="32" height="20" fill="#334155"/><rect x="430" y="224" width="32" height="20" fill="#334155"/>
+      <text x="280" y="268" fill="#94a3b8" text-anchor="middle" font-size="10">10 channels — networks pick one index each turn</text>
+      <defs><marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f87171"/></marker></defs>
+    </svg>
+  </div>
+
+  <h3>11.2 Key entities in code</h3>
+  <table>
+    <tr><th>Class / object</th><th>File</th><th>Role</th></tr>
+    <tr><td><code>User</code></td><td><code>Pythonic_Environment.py</code></td><td>One wireless device: location (x,y), power, per-channel interference accumulator</td></tr>
+    <tr><td><code>Net</code></td><td><code>Pythonic_Environment.py</code></td><td>One local network: users, current channel, network manager (master), SINR sensing</td></tr>
+    <tr><td><code>python_env</code></td><td><code>Pythonic_Environment.py</code></td><td>Multi-network turn-based environment: <code>reset()</code>, <code>step(action)</code></td></tr>
+    <tr><td><code>Agent</code></td><td><code>BuildingBlocks/Agent.py</code></td><td>One network manager: DeepMellow model + local replay buffer</td></tr>
+  </table>
+
+  <h3>11.3 Network manager (master user)</h3>
+  <p>Each <code>Net</code> elects a <strong>manager</strong> — the user with minimum total distance to all other users in the same network. This manager is the RL agent (<code>Master_Id</code> in <code>info</code>). It senses channel quality and chooses which channel the whole network should use.</p>
+
+  <h3>11.4 Two ways to create scenarios</h3>
+  <table>
+    <tr><th>Mode</th><th>Entry point</th><th>When used</th></tr>
+    <tr>
+      <td><strong>Random training</strong></td>
+      <td><code>main_v3.py</code> → <code>set_random_location_of_networks()</code> → <code>python_env(..., training=True)</code></td>
+      <td>Every federated round: new random topology</td>
+    </tr>
+    <tr>
+      <td><strong>Fixed evaluation</strong></td>
+      <td><code>SetSpecificEnv.py</code> → reads <code>scenarios_for_test/&lt;name&gt;/Locations.csv</code></td>
+      <td>Paper-style reproducible evaluation (e.g. Amud_Anan)</td>
+    </tr>
+  </table>
+
+  <div class="callout def">
+    <strong>Important design choice</strong>
+    The environment returns only the <strong>quality vector (QV)</strong> — it does <em>not</em> compute reward. Rewards are calculated in <code>Coordinator.py</code> using CARLTON Algorithms 2–3. This separation lets the same physics simulator serve both federated and centralized training.
+  </div>
+</section>
+
+<section class="slide" id="s12">
+  <span class="slide-num">PART 9</span>
+  <h2>Code Map — Which File Does What</h2>
+  <p class="subtitle">End-to-end pipeline from <code>main_v3.py</code> to weight checkpoint</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 540 320" width="540" height="320">
+      <rect x="200" y="8" width="140" height="32" rx="6" fill="#1e3a5f" stroke="#3b82f6"/><text x="270" y="29" fill="#fff" text-anchor="middle" font-size="10">main_v3.py</text>
+      <text x="270" y="52" fill="#64748b" text-anchor="middle" font-size="8">communication round loop</text>
+      <line x1="270" y1="40" x2="270" y2="62" stroke="#475569"/>
+      <rect x="155" y="62" width="110" height="28" rx="5" fill="#334155"/><text x="210" y="80" fill="#cbd5e1" text-anchor="middle" font-size="9">RandomLocation</text>
+      <rect x="275" y="62" width="110" height="28" rx="5" fill="#334155"/><text x="330" y="80" fill="#cbd5e1" text-anchor="middle" font-size="9">python_env</text>
+      <line x1="210" y1="90" x2="210" y2="108" stroke="#475569"/><line x1="330" y1="90" x2="330" y2="108" stroke="#475569"/>
+      <line x1="210" y1="108" x2="330" y2="108" stroke="#475569"/>
+      <line x1="270" y1="108" x2="270" y2="118" stroke="#475569"/>
+      <rect x="190" y="118" width="160" height="28" rx="5" fill="#1e3a5f" stroke="#22d3ee"/><text x="270" y="136" fill="#fff" text-anchor="middle" font-size="10">Worker.py → Coordinator.py</text>
+      <line x1="270" y1="146" x2="270" y2="162" stroke="#475569"/>
+      <rect x="60" y="162" width="120" height="26" rx="5" fill="#334155"/><text x="120" y="179" fill="#cbd5e1" text-anchor="middle" font-size="8">Agent + DeepMellow</text>
+      <rect x="210" y="162" width="120" height="26" rx="5" fill="#334155"/><text x="270" y="179" fill="#cbd5e1" text-anchor="middle" font-size="8">ReplayMemory (local)</text>
+      <rect x="360" y="162" width="120" height="26" rx="5" fill="#334155"/><text x="420" y="179" fill="#cbd5e1" text-anchor="middle" font-size="8">python_env.step</text>
+      <line x1="270" y1="188" x2="270" y2="208" stroke="#475569"/>
+      <rect x="175" y="208" width="190" height="28" rx="5" fill="#0f2a1a" stroke="#34d399"/><text x="270" y="226" fill="#fff" text-anchor="middle" font-size="9">local_train_steps × agent.learn()</text>
+      <line x1="270" y1="236" x2="270" y2="252" stroke="#475569"/>
+      <rect x="175" y="252" width="190" height="28" rx="5" fill="#1e3a5f" stroke="#3b82f6"/><text x="270" y="270" fill="#fff" text-anchor="middle" font-size="9">TrainBlock.federated_averaging()</text>
+      <text x="270" y="300" fill="#64748b" text-anchor="middle" font-size="9">→ global_weights_round_XXXX.pkl</text>
+    </svg>
+  </div>
+
+  <table>
+    <tr><th>File</th><th>Function / class</th><th>What happens</th></tr>
+    <tr>
+      <td><code>main_v3.py</code></td>
+      <td><code>run_federated_training()</code></td>
+      <td>Outer loop: T communication rounds. Each round: sample scenario → run episode → FedAvg → log → checkpoint every 50 rounds</td>
+    </tr>
+    <tr>
+      <td><code>Utils/RandomLocationOfNetworks.py</code></td>
+      <td><code>set_random_location_of_networks(n)</code></td>
+      <td>Places network centers on map (first random, others within 50–500 m of existing net). Returns user counts + (mean, std) per net</td>
+    </tr>
+    <tr>
+      <td><code>SimulationEnvironments/Pythonic_Environment.py</code></td>
+      <td><code>python_env</code></td>
+      <td>Creates all <code>Net</code> objects, shuffles turn order, runs turn-based channel allocation</td>
+    </tr>
+    <tr>
+      <td><code>BuildingBlocks/Worker.py</code></td>
+      <td><code>worker()</code></td>
+      <td>Thin wrapper — calls <code>coordinator()</code> with hyperparameters</td>
+    </tr>
+    <tr>
+      <td><code>BuildingBlocks/Coordinator.py</code></td>
+      <td><code>coordinator()</code></td>
+      <td>Main episode loop: state → action → reward → env.step → replay → local training</td>
+    </tr>
+    <tr>
+      <td><code>DeepMellow_Single_agent/DeepMellow_no_epsilon.py</code></td>
+      <td><code>DeepMellow</code>, <code>QResNet</code></td>
+      <td>Q-network, MellowMax backup, action masking, <code>learn()</code></td>
+    </tr>
+    <tr>
+      <td><code>BuildingBlocks/TrainBlock.py</code></td>
+      <td><code>federated_averaging()</code></td>
+      <td>Element-wise mean of all agents' <code>state_dict()</code> tensors</td>
+    </tr>
+    <tr>
+      <td><code>main_centralized.py</code></td>
+      <td><code>run_centralized_training()</code></td>
+      <td><em>Alternative path:</em> paper CTDE — local replay merged to global buffer, centralized <code>train_model()</code></td>
+    </tr>
+  </table>
+
+  <h3>Default hyperparameters (federated run)</h3>
+  <table>
+    <tr><th>Parameter</th><th>Value</th><th>Where set</th></tr>
+    <tr><td>Communication rounds</td><td>1000</td><td><code>main_v3.py</code></td></tr>
+    <tr><td>Networks per round</td><td>2–7 (random)</td><td><code>min_nets</code>, <code>max_nets</code></td></tr>
+    <tr><td>Channels K</td><td>10</td><td><code>NUM_OF_CHANNELS</code> in Coordinator + <code>number_of_channels</code> in main</td></tr>
+    <tr><td>Local train steps</td><td>10</td><td><code>local_train_steps</code></td></tr>
+    <tr><td>Replay buffer size</td><td>10,000</td><td><code>replay_memory_size</code></td></tr>
+    <tr><td>Batch size</td><td>64</td><td><code>batch_size</code></td></tr>
+    <tr><td>Learning rate</td><td>0.00025</td><td>Adam optimizer</td></tr>
+    <tr><td>Gamma γ</td><td>0.9</td><td>DeepMellow</td></tr>
+    <tr><td>MellowMax ω</td><td>0.02</td><td><code>mellowmax_constant</code></td></tr>
+    <tr><td>Epsilon ε</td><td>0.5 → 0.01 (first half of rounds)</td><td>linear decay in <code>main_v3.py</code></td></tr>
+    <tr><td>Episode length</td><td><code>n_nets × 20 + n_nets</code> steps</td><td><code>python_env.max_length</code></td></tr>
+  </table>
+</section>
+
+<section class="slide" id="s13">
+  <span class="slide-num">PART 10</span>
+  <h2>Episode Flow — What Happens Step by Step</h2>
+  <p class="subtitle">One full episode inside a single federated communication round</p>
+
+  <h3>Phase A — Scenario initialization</h3>
+  <ol class="steps">
+    <li><code>main_v3.py</code> draws <code>number_of_nets</code> ∈ [2, 7] and builds a <code>python_env</code> instance.</li>
+    <li><code>env.reset()</code> creates K networks, each with random users around a center, each starting on a random channel.</li>
+    <li>Network turn order is <strong>shuffled</strong> — agents do not always act in net-id order.</li>
+    <li>First acting network's manager receives initial QV via <code>create_sensed_vector()</code>.</li>
+    <li><code>Coordinator</code> creates an <code>Agent</code> (DeepMellow + replay buffer), loads <code>global_weights</code> if not round 1.</li>
+  </ol>
+
+  <h3>Phase B — Turn loop (repeats until <code>done</code>)</h3>
+  <ol class="steps">
+    <li><strong>Build state:</strong> QV (10 values) + CBR (4-bit binary of current channel) → shape (14, 1, history).</li>
+    <li><strong>Select action:</strong> <code>agent.sample_action(state, ε)</code> — softmax over Q-values with masking on bad channels.</li>
+    <li><strong>Personal reward:</strong> <code>calculate_rewards_personal()</code> → scaled by 0.6, stored in replay buffer.</li>
+    <li><strong>Environment step:</strong> <code>env.step(action, agent_id)</code> — network switches to chosen channel; interference landscape updates for everyone.</li>
+    <li><strong>Next network's turn:</strong> env returns next manager's QV + metadata (<code>Master_Id</code>, location, time).</li>
+    <li><strong>Social reward (delayed):</strong> when a network acts again, <code>calculate_rewards_sw()</code> adds 0.4 × neighbor welfare to the <em>previous</em> transition's reward.</li>
+    <li><strong>Store transition:</strong> (state, action, reward, next_state, done) in local replay buffer.</li>
+    <li>Loop until <code>counter_game_length ≥ max_length</code> (typically ~140 steps for 7 nets).</li>
+  </ol>
+
+  <h3>Phase C — End of episode</h3>
+  <ol class="steps">
+    <li>Mark final transitions as terminal (<code>done=True</code>).</li>
+    <li>Each agent runs <code>local_train_steps</code> (default 10) calls to <code>agent.learn()</code> on its <strong>private</strong> replay buffer.</li>
+    <li><code>main_v3.py</code> collects all agents' <code>state_dict()</code> and runs <code>federated_averaging()</code>.</li>
+    <li>Result becomes <code>global_weights</code> for the next round.</li>
+  </ol>
+
+  <div class="callout good">
+    <strong>What the log lines mean</strong>
+    <code>reward=73.3</code> = mean accumulated reward per agent in that episode.
+    <code>avg_channel_changes=2.0</code> = mean number of times each agent switched channel (lower = more stable policy).
+    Early training: ~14–16 channel changes. Late training (round 1000): often ~2.
+  </div>
+
+  <pre class="code"># Simplified pseudocode — one federated round
+global_weights = None
+for round in range(1000):
+    scenario = python_env(nets=random(2..7), channels=10)
+    agents = coordinator(scenario, global_weights=global_weights, local_train_steps=10)
+    local_weights = [agent.state_dict() for agent in agents.values()]
+    global_weights = federated_averaging(local_weights)  # FedAvg</pre>
+</section>
+
+<section class="slide" id="s14">
+  <span class="slide-num">PART 11</span>
+  <h2>State, Action &amp; Reward — In Detail</h2>
+
+  <h3>14.1 Observation → State (Eq. 17)</h3>
+  <p>The raw environment observation is a <strong>Quality Vector (QV)</strong> of length K=10. Each entry q<sub>k</sub> ∈ [0, 1] is the fraction of users in the network for whom channel k passes the SINR threshold.</p>
+
+  <p>The RL state adds <strong>CBR (Channel Binary Representation)</strong> — the current channel index encoded in binary:</p>
+  <div class="formula">num_of_bits = floor(log₂ K) + 1 = 4 &nbsp;→&nbsp; state_dim = 4 + 10 = 14</div>
+
+  <p>Built in <code>Utils/utils.py</code> → <code>modify_obs_add_channnel_2b()</code>:</p>
+  <pre class="code"># Example: current channel = 7 → binary [0,1,1,1]
+# state = concatenate(CBR, QV) = [0, 1, 1, 1, q0, q1, ..., q9]
+# Tensor shape fed to network: (14, 1, history_length)  →  flattened to 14-dim vector</pre>
+
+  <table>
+    <tr><th>QV value</th><th>Meaning for agent</th></tr>
+    <tr><td>1.0</td><td>All users in this network can use channel k with acceptable SINR</td></tr>
+    <tr><td>0.5</td><td>Half of users would be satisfied on channel k</td></tr>
+    <tr><td>0.0</td><td>No user meets SINR threshold on channel k → <strong>masked</strong> (invalid action)</td></tr>
+  </table>
+
+  <h3>14.2 Action space (Section III-B)</h3>
+  <ul>
+    <li><strong>Action</strong> = integer channel index ∈ {0, 1, …, 9}</li>
+    <li>Choosing action <code>a</code> calls <code>net.define_channel(a)</code> — the entire network moves to channel a</li>
+    <li><strong>Action masking (Eq. 15):</strong> channels with QV = 0 get logit −10⁹ → effectively forbidden. If all channels are bad, agent keeps current channel (decode from CBR bits)</li>
+    <li><strong>Exploration:</strong> ε-greedy softmax during training; greedy (ε=0) at evaluation</li>
+  </ul>
+
+  <h3>14.3 Reward structure (Eq. 13, Algorithms 2–3)</h3>
+  <p>Total reward is split across two timesteps in code:</p>
+
+  <h4>Personal component r<sub>p</sub> (immediate, ×0.6)</h4>
+  <p>From <code>calculate_rewards_personal()</code> using QV at chosen channel:</p>
+  <ul>
+    <li>If QV(action) ≥ 0.9 → r = 4 (high quality channel)</li>
+    <li>Else → r = (rank/K − 0.5) × 2 where rank = position in sorted QV list</li>
+    <li><strong>Stability bonus:</strong> if staying on same channel and r &gt; 0 → r += 0.1·r</li>
+  </ul>
+
+  <h4>Social welfare r<sub>sw</sub> (delayed, ×0.4)</h4>
+  <p>From <code>calculate_rewards_sw()</code> when the same agent acts again:</p>
+  <ul>
+    <li>Find <strong>neighbor networks</strong> within 500 m (Γ in paper)</li>
+    <li>Average their personal rewards received between the agent's last two decision times</li>
+    <li>Add 0.4 × that average to the previous transition's stored reward</li>
+  </ul>
+
+  <div class="formula">r<sub>total</sub> ≈ 0.6 · r<sub>p</sub> + 0.4 · r<sub>sw</sub> &nbsp;&nbsp;(paper uses ρ=0.7 / 0.3)</div>
+
+  <div class="callout warn">
+    <strong>Why reward feels "delayed"</strong>
+    Personal reward is written immediately when the agent acts. Social reward is added later when neighbors have acted in between — this matches Algorithm 3's neighbor welfare window. The replay buffer stores the combined value before <code>learn()</code> runs.
+  </div>
+</section>
+
+<section class="slide" id="s15">
+  <span class="slide-num">PART 12</span>
+  <h2>SINR Pipeline — How QV Is Computed</h2>
+  <p class="subtitle">Inside <code>Net.create_sensed_vector()</code> — the physics your agent "senses"</p>
+
+  <h3>Step-by-step (maps to paper equations)</h3>
+  <ol class="steps">
+    <li><strong>Interference matrix</strong> (<code>create_noise_matrix</code>): For each user and each candidate channel k, sum interference from all users in <em>other</em> networks. Uses Egli path loss + spectral attenuation between channels (Eq. 5–6).</li>
+    <li><strong>Thermal noise</strong>: Add −134.9 dB thermal noise term (Eq. 7).</li>
+    <li><strong>SINR matrix</strong>: For each (user, channel): SINR = P<sub>received,min</sub> / (I + I<sub>T</sub>) where P<sub>received,min</sub> is conservative in-network power (Eq. 2–3).</li>
+    <li><strong>BSINR threshold</strong>: Binary indicator: SINR &gt; 4 dB → 1, else 0 (Eq. 11; SINR* surrogate in this repo).</li>
+    <li><strong>Quality vector QV</strong>: Average BSINR over all users per channel → vector of length 10 in [0, 1] (Eq. 12).</li>
+  </ol>
+
+  <div class="diagram">
+    <svg viewBox="0 0 500 100" width="500" height="100">
+      <rect x="5" y="35" width="70" height="30" rx="4" fill="#334155"/><text x="40" y="54" fill="#cbd5e1" text-anchor="middle" font-size="8">All nets + channels</text>
+      <text x="82" y="52" fill="#64748b" font-size="14">→</text>
+      <rect x="90" y="35" width="65" height="30" rx="4" fill="#334155"/><text x="122" y="54" fill="#cbd5e1" text-anchor="middle" font-size="8">Interference</text>
+      <text x="162" y="52" fill="#64748b" font-size="14">→</text>
+      <rect x="170" y="35" width="55" height="30" rx="4" fill="#334155"/><text x="197" y="54" fill="#cbd5e1" text-anchor="middle" font-size="8">SINR</text>
+      <text x="232" y="52" fill="#64748b" font-size="14">→</text>
+      <rect x="240" y="35" width="55" height="30" rx="4" fill="#334155"/><text x="267" y="54" fill="#cbd5e1" text-anchor="middle" font-size="8">BSINR</text>
+      <text x="302" y="52" fill="#64748b" font-size="14">→</text>
+      <rect x="310" y="35" width="45" height="30" rx="4" fill="#1e3a5f" stroke="#22d3ee"/><text x="332" y="54" fill="#fff" text-anchor="middle" font-size="8">QV</text>
+      <text x="365" y="52" fill="#64748b" font-size="14">→</text>
+      <rect x="373" y="35" width="55" height="30" rx="4" fill="#0f2a1a" stroke="#34d399"/><text x="400" y="54" fill="#fff" text-anchor="middle" font-size="8">+ CBR</text>
+      <text x="438" y="52" fill="#64748b" font-size="14">→</text>
+      <rect x="446" y="35" width="48" height="30" rx="4" fill="#1e3a5f" stroke="#3b82f6"/><text x="470" y="54" fill="#fff" text-anchor="middle" font-size="8">State</text>
+      <text x="250" y="88" fill="#94a3b8" text-anchor="middle" font-size="9">Recalculated every turn — other networks' channel choices change your QV</text>
+    </svg>
+  </div>
+
+  <div class="callout def">
+    <strong>Multi-agent coupling</strong>
+    When Net A switches to channel 3, Net B's QV for channel 3 may drop (more interference). This is why channel allocation is a <em>game</em> — each agent's best action depends on others. CARLTON uses social welfare reward to encourage cooperative equilibria.
+  </div>
+</section>
+
+<section class="slide" id="s16">
+  <span class="slide-num">PART 13</span>
+  <h2>Neural Network &amp; Learning</h2>
+
+  <h3>16.1 Architecture: QResNet</h3>
+  <p>Defined in <code>DeepMellow_no_epsilon.py</code>:</p>
+  <ul>
+    <li><strong>Input:</strong> flattened state — 14 dimensions (with history_length=1)</li>
+    <li><strong>Hidden:</strong> 3 residual MLP layers, 128 nodes each, LeakyReLU</li>
+    <li><strong>Output:</strong> 10 Q-values (one per channel action)</li>
+  </ul>
+
+  <h3>16.2 Action selection</h3>
+  <pre class="code">q_values = QResNet(state)
+mask = { -1e9 if QV[k]==0 else 0 }      # Eq. 15 masking
+probs = softmax(q_values + mask)
+action = sample(probs) if random() < ε else argmax(probs)</pre>
+
+  <h3>16.3 Learning update (DeepMellow)</h3>
+  <p>Standard DQN-style backup, but target uses <strong>MellowMax</strong> instead of max:</p>
+  <div class="formula">target = r + γ · mellowmax(Q(s', ·)) &nbsp;&nbsp; loss = Huber(Q(s,a), target)</div>
+  <p>MellowMax (ω=0.02) is smoother than hard max — reduces overestimation bias in multi-agent settings (Section III-D in paper).</p>
+
+  <h3>16.4 Replay buffer</h3>
+  <table>
+    <tr><th>Field</th><th>Content</th></tr>
+    <tr><td>observations</td><td>State tensors (14 × 1 × history)</td></tr>
+    <tr><td>actions</td><td>Channel index chosen</td></tr>
+    <tr><td>rewards</td><td>0.6·r<sub>p</sub> + 0.4·r<sub>sw</sub> (combined after delay)</td></tr>
+    <tr><td>next observations</td><td>Next state after transition</td></tr>
+    <tr><td>terminal flags</td><td>Episode end marker</td></tr>
+  </table>
+  <p>Each agent has its <strong>own</strong> buffer (size 10,000). In federated mode, buffers are <em>not</em> merged to a central server — only model weights are averaged.</p>
+
+  <h3>16.5 Federated weight merge</h3>
+  <pre class="code"># TrainBlock.py — federated_averaging()
+for each layer key in state_dict:
+    global[key] = mean([agent_i.state_dict()[key] for all agents])</pre>
+  <p>All agents share identical architecture, so tensors are directly comparable. Round 1 starts from random init; rounds 2+ load previous global weights before the episode.</p>
+</section>
+
+<section class="slide" id="s17">
+  <span class="slide-num">PART 14</span>
+  <h2>Two Training Modes in Your Repo</h2>
+  <p class="subtitle">Federated (FRL) vs Centralized (paper CTDE) — same environment, different learning topology</p>
+
+  <table>
+    <tr><th>Aspect</th><th>Federated — <code>main_v3.py</code></th><th>Centralized — <code>main_centralized.py</code></th></tr>
+    <tr><td>Outer loop</td><td>Communication round (broadcast → local → FedAvg)</td><td>Episode loop (collect → merge replay → train centrally)</td></tr>
+    <tr><td>Replay memory</td><td>Private per agent, stays local</td><td>Merged into <code>Global_RB_Storage_*</code></td></tr>
+    <tr><td>Weight update</td><td><code>federated_averaging()</code> on local SGD results</td><td><code>TrainBlock.train_model()</code> on global buffer (40 Adam steps)</td></tr>
+    <tr><td>Matches paper?</td><td>No — FRL variant you built</td><td>Closer to Algorithm 4 CTDE</td></tr>
+    <tr><td>Log file</td><td><code>training_log.txt</code></td><td><code>training_log_centralized.txt</code></td></tr>
+    <tr><td>Checkpoints</td><td><code>Train_weights_frl/global_weights_round_*.pkl</code></td><td><code>Train_weights_*/trained_weights_step_*.pkl</code></td></tr>
+  </table>
+
+  <div class="diagram">
+    <svg viewBox="0 0 520 200" width="520" height="200">
+      <text x="130" y="18" fill="#3b82f6" text-anchor="middle" font-size="11" font-weight="bold">FRL (main_v3)</text>
+      <rect x="20" y="30" width="50" height="30" rx="4" fill="#334155"/><text x="45" y="49" fill="#cbd5e1" text-anchor="middle" font-size="8">Agent</text>
+      <rect x="20" y="70" width="50" height="20" rx="3" fill="#1e293b"/><text x="45" y="83" fill="#64748b" text-anchor="middle" font-size="7">local RB</text>
+      <rect x="100" y="30" width="50" height="30" rx="4" fill="#334155"/><text x="125" y="49" fill="#cbd5e1" text-anchor="middle" font-size="8">Agent</text>
+      <rect x="100" y="70" width="50" height="20" rx="3" fill="#1e293b"/><text x="125" y="83" fill="#64748b" text-anchor="middle" font-size="7">local RB</text>
+      <line x1="70" y1="45" x2="100" y2="45" stroke="#34d399" stroke-width="1.5"/>
+      <text x="85" y="40" fill="#34d399" font-size="7">weights</text>
+      <rect x="175" y="38" width="70" height="36" rx="6" fill="#1e3a5f" stroke="#3b82f6"/><text x="210" y="60" fill="#fff" text-anchor="middle" font-size="9">FedAvg</text>
+      <line x1="150" y1="45" x2="175" y2="56" stroke="#3b82f6"/><line x1="210" y1="74" x2="45" y2="100" stroke="#3b82f6" stroke-dasharray="3 2"/>
+
+      <text x="390" y="18" fill="#fbbf24" text-anchor="middle" font-size="11" font-weight="bold">CTDE (main_centralized)</text>
+      <rect x="300" y="30" width="50" height="30" rx="4" fill="#334155"/><text x="325" y="49" fill="#cbd5e1" text-anchor="middle" font-size="8">Agent</text>
+      <rect x="380" y="30" width="50" height="30" rx="4" fill="#334155"/><text x="405" y="49" fill="#cbd5e1" text-anchor="middle" font-size="8">Agent</text>
+      <line x1="325" y1="60" x2="360" y2="95" stroke="#fbbf24"/><line x1="405" y1="60" x2="370" y2="95" stroke="#fbbf24"/>
+      <rect x="330" y="95" width="80" height="30" rx="5" fill="#1a1508" stroke="#fbbf24"/><text x="370" y="114" fill="#fff" text-anchor="middle" font-size="8">Global Replay</text>
+      <line x1="370" y1="125" x2="370" y2="145" stroke="#fbbf24"/>
+      <rect x="330" y="145" width="80" height="28" rx="5" fill="#1e3a5f" stroke="#22d3ee"/><text x="370" y="163" fill="#fff" text-anchor="middle" font-size="8">Central train</text>
+      <line x1="370" y1="173" x2="325" y2="185" stroke="#22d3ee" stroke-dasharray="3 2"/><line x1="370" y1="173" x2="405" y2="185" stroke="#22d3ee" stroke-dasharray="3 2"/>
+      <text x="260" y="195" fill="#64748b" text-anchor="middle" font-size="9">Same python_env + Coordinator — different aggregation of experience</text>
+    </svg>
+  </div>
+
+  <h3>How to run</h3>
+  <pre class="code"># Federated RL (1000 rounds)
+py -3 main_v3.py
+
+# Centralized CTDE (paper-style, 1000 episodes)
+py -3 main_centralized.py
+
+# Quick 2-round sanity test
+py -3 test_federated_run.py</pre>
+
+  <h3>What to look at while training</h3>
+  <ul>
+    <li><code>training_log.txt</code> — federated round rewards, channel changes, epsilon</li>
+    <li><code>Train_weights_frl/global_weights_round_1000.pkl</code> — final global Q-network weights</li>
+    <li><code>Train_weights_frl/training_complete.json</code> — summary stats after run completes</li>
+  </ul>
+</section>
+
+<!-- ========== EVALUATION METRICS ========== -->
+<section class="slide" id="s18">
+  <span class="slide-num">PART 15</span>
+  <h2>Evaluation Metrics — How CARLTON Performance Is Measured</h2>
+  <p class="subtitle">Paper Section IV-A (Eq. 18–22) · implemented in <code>Utils/ScenarioExamination.py</code></p>
+
+  <p>After an episode finishes, the system is evaluated using metrics derived from the <strong>game history</strong> — a log of every decision. During training, <code>Coordinator.py</code> appends one row per turn:</p>
+  <pre class="code">game_history row = [time, agent_id, action, QV_0, QV_1, …, QV_9]
+# Stored as CSV columns: time, agent_id, action, Ch_0, Ch_1, …, Ch_9</pre>
+  <p>All metrics below are computed by <code>get_game_performamce(game_history)</code>, which calls specialized helpers and returns a single summary row (including WS).</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 520 200" width="520" height="200">
+      <rect x="180" y="8" width="160" height="32" rx="6" fill="#1e3a5f" stroke="#3b82f6"/>
+      <text x="260" y="28" fill="#fff" text-anchor="middle" font-size="10">game_history (one episode)</text>
+      <line x1="260" y1="40" x2="260" y2="55" stroke="#475569"/>
+      <rect x="30" y="55" width="100" height="36" rx="5" fill="#0f2a1a" stroke="#34d399"/>
+      <text x="80" y="72" fill="#34d399" text-anchor="middle" font-size="9">Channel Quality</text>
+      <text x="80" y="84" fill="#64748b" text-anchor="middle" font-size="7">QV, CQ, mean, min</text>
+      <rect x="150" y="55" width="100" height="36" rx="5" fill="#1a1508" stroke="#fbbf24"/>
+      <text x="200" y="72" fill="#fbbf24" text-anchor="middle" font-size="9">Stability</text>
+      <text x="200" y="84" fill="#64748b" text-anchor="middle" font-size="7">ANCC, ANCCS, CT, CTS</text>
+      <rect x="270" y="55" width="100" height="36" rx="5" fill="#1e1a2e" stroke="#a78bfa"/>
+      <text x="320" y="72" fill="#a78bfa" text-anchor="middle" font-size="9">Efficiency</text>
+      <text x="320" y="84" fill="#64748b" text-anchor="middle" font-size="7">SE, SES</text>
+      <line x1="80" y1="91" x2="200" y2="115" stroke="#475569"/><line x1="200" y1="91" x2="260" y2="115" stroke="#475569"/><line x1="320" y1="91" x2="260" y2="115" stroke="#475569"/>
+      <rect x="185" y="115" width="150" height="40" rx="8" fill="#1e3a5f" stroke="#22d3ee"/>
+      <text x="260" y="133" fill="#22d3ee" text-anchor="middle" font-size="11" font-weight="bold">Weighted Score (WS)</text>
+      <text x="260" y="148" fill="#94a3b8" text-anchor="middle" font-size="8">0.4·CQ + 0.4·CTS + 0.1·ANCCS + 0.1·SES</text>
+      <text x="260" y="178" fill="#64748b" text-anchor="middle" font-size="9">Used to compare CARLTON vs RA, JAR, graph coloring (Figs. 7, 12–15)</text>
+    </svg>
+  </div>
+
+  <!-- 1. Channel Quality -->
+  <h3>15.1 Channel Quality Metrics</h3>
+  <p>These metrics focus on SINR and whether users meet the required quality standard (SINR &gt; SINR*).</p>
+
+  <h4>Quality Vector (QV)</h4>
+  <p>The <strong>fundamental observation</strong> for each network manager. For network n and channel k at time t:</p>
+  <div class="formula">QV<sup>n</sup><sub>k</sub>(t) = (1/M<sup>n</sup>) · Σ<sub>m</sub> 𝟙(SINR<sup>n,m</sup><sub>k</sub>(t) &gt; SINR*)</div>
+  <ul>
+    <li>Each entry is in <strong>[0, 1]</strong>: fraction of users in network n whose SINR on channel k exceeds the target threshold.</li>
+    <li>In code: computed live by <code>Net.create_sensed_vector()</code> (BSINR average over users, Eq. 11–12).</li>
+    <li>Logged in game history as columns <code>Ch_0</code> … <code>Ch_9</code> after each agent's turn.</li>
+    <li>QV = 1.0 → all users satisfied on that channel; QV = 0 → no user meets SINR* (masked action in RL).</li>
+  </ul>
+
+  <h4>Channel Quality (CQ)</h4>
+  <p>At the <strong>end of the scenario</strong> (time T), each network n operates on final channel c<sup>n</sup>(T). CQ collects the QV on that chosen channel:</p>
+  <div class="formula">CQ = [ QV<sup>1</sup><sub>c¹(T)</sub>, QV<sup>2</sup><sub>c²(T)</sub>, …, QV<sup>N</sup><sub>c^N(T)</sub> ] &nbsp;&nbsp;(Eq. 18)</div>
+  <p>In <code>channelQuality()</code>: for each agent, take the QV value on the channel selected at the <em>penultimate</em> decision point (<code>action</code> at row −2, QV at row −1).</p>
+
+  <table>
+    <tr><th>Statistic</th><th>Symbol</th><th>Meaning</th><th>Code column</th><th>Better</th></tr>
+    <tr>
+      <td><strong>Mean CQ</strong></td><td>CQ&#773;</td>
+      <td>Average quality across all networks — overall system performance</td>
+      <td><code>Channel_Quality_meanBased</code></td><td>Higher ↑</td>
+    </tr>
+    <tr>
+      <td><strong>Median CQ</strong></td><td>CQ&#8764;</td>
+      <td>Middle value of the quality distribution — robust to outliers</td>
+      <td><code>Channel_Quality_median</code></td><td>Higher ↑</td>
+    </tr>
+    <tr>
+      <td><strong>Minimum CQ</strong></td><td>min CQ</td>
+      <td>Worst-performing network's quality — <strong>fairness</strong> measure; ensures no network is left with unusable links</td>
+      <td><code>Channel_Quality_min</code></td><td>Higher ↑ (paper: &gt;0.95 at convergence)</td>
+    </tr>
+  </table>
+
+  <div class="callout good">
+    <strong>Secondary composite (paper Figs. 7, 13, 15)</strong>
+    E[(CQ + min CQ) / 2] — balances average quality with fairness to the worst network. Reported in <code>compare_to_paper.py</code> as <code>cq_minmax_combo</code>.
+  </div>
+
+  <!-- 2. Stability & Efficiency -->
+  <h3>15.2 Stability and Efficiency Metrics</h3>
+  <p>Beyond raw signal quality, these measure how "expensive" it is for the system to reach a good allocation — spectrum mobility and convergence speed.</p>
+
+  <h4>Average Number of Channel Changes (ANCC &amp; ANCCS)</h4>
+  <p><strong>ANCC</strong> counts how many times each network switches channels before stabilizing, then averages over all networks:</p>
+  <ul>
+    <li>Computed in <code>clacANCC()</code>: walk each agent's action sequence; increment counter when action ≠ previous channel.</li>
+    <li><strong>Lower ANCC</strong> = fewer disruptive hops = more stable policy.</li>
+  </ul>
+  <div class="formula">ANCCS = 1 − ANCC / T &nbsp;&nbsp;(Eq. 19)</div>
+  <p><strong>ANCCS (Score)</strong> normalizes mobility — rewards algorithms that achieve high quality with fewer channel changes. In code: <code>ancc_score = 1 − mean(changes / decision_points)</code> per agent.</p>
+
+  <table>
+    <tr><th>Training log vs metric</th><th>Relation</th></tr>
+    <tr><td><code>avg_channel_changes</code> in <code>training_log.txt</code></td><td>Per-episode counter from <code>Agent.change_channel_counter</code> — closely related to ANCC during training</td></tr>
+    <tr><td>Early training (~round 10)</td><td>ANCC ≈ 14–16 — agents explore heavily</td></tr>
+    <tr><td>Late training (~round 1000)</td><td>ANCC ≈ 2 — policy stabilizes on good channels</td></tr>
+  </table>
+
+  <h4>Convergence Time (CT &amp; CTS)</h4>
+  <p><strong>CT</strong> marks the time index of the <strong>last channel change</strong> in the entire system (Eq. 20 in paper):</p>
+  <ul>
+    <li><code>convergenceTime()</code> walks backward from each agent's final action until a channel change is found; returns <code>max</code> over all agents.</li>
+    <li><strong>Lower CT</strong> = system settled earlier = faster adaptation.</li>
+  </ul>
+  <div class="formula">CTS = 1 − CT / (T·N) &nbsp;&nbsp;(Eq. 20)</div>
+  <p><strong>CTS (Score)</strong> — higher means the algorithm converges quickly. In code: <code>ct_score = 1 − CT / max_time</code> where <code>max_time</code> is the last timestep in the episode.</p>
+
+  <h4>Spectrum Efficiency (SE &amp; SES)</h4>
+  <p>After networks settle, this assesses <strong>spectral distortion</strong> — how much unused spectrum capacity remains:</p>
+  <div class="formula">Ψ<sup>n</sup> = √( Σ<sub>k</sub> QV<sup>n</sup><sub>k</sub>(T)² ) / √K &nbsp;&nbsp;(Eq. 21)</div>
+  <ul>
+    <li><code>spectrumEfficiency()</code>: RMS of final QV vector across all K channels for each network, then mean over networks.</li>
+    <li><strong>High SES (~0.8 at paper convergence)</strong> means unused channels still have high quality — a new network entering the area can find a good channel without causing massive interference to existing ones.</li>
+    <li>SES is <em>not directly optimized</em> by the reward; it emerges from good cooperative allocation.</li>
+  </ul>
+
+  <!-- 3. WS -->
+  <h3>15.3 Weighted Score (WS) — The Composite Grade</h3>
+  <p>To provide a single comprehensive measure for comparing CARLTON against baselines (Random Agent, JAR, graph coloring), the paper defines:</p>
+  <div class="formula">WS = 0.4 · CQ&#773; + 0.4 · CTS + 0.1 · ANCCS + 0.1 · SES &nbsp;&nbsp;(Eq. 22)</div>
+
+  <div class="grid-2">
+    <table>
+      <tr><th>Component</th><th>Weight</th><th>What it rewards</th></tr>
+      <tr><td>Mean Channel Quality (CQ&#773;)</td><td><strong>40%</strong></td><td>High SINR satisfaction across networks</td></tr>
+      <tr><td>Convergence Time Score (CTS)</td><td><strong>40%</strong></td><td>Fast adaptation to interference landscape</td></tr>
+      <tr><td>ANCC Score (ANCCS)</td><td><strong>10%</strong></td><td>Stability — few channel hops</td></tr>
+      <tr><td>Spectrum Efficiency Score (SES)</td><td><strong>10%</strong></td><td>Clean unused spectrum for future entrants</td></tr>
+    </table>
+    <div class="diagram">
+      <svg viewBox="0 0 200 200" width="200" height="200">
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#334155" stroke-width="24"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#34d399" stroke-width="24" stroke-dasharray="176 264" stroke-dashoffset="66" transform="rotate(-90 100 100)"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#3b82f6" stroke-width="24" stroke-dasharray="176 264" stroke-dashoffset="-110" transform="rotate(-90 100 100)"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#fbbf24" stroke-width="24" stroke-dasharray="44 396" stroke-dashoffset="-286" transform="rotate(-90 100 100)"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#a78bfa" stroke-width="24" stroke-dasharray="44 396" stroke-dashoffset="-330" transform="rotate(-90 100 100)"/>
+        <text x="100" y="95" fill="#fff" text-anchor="middle" font-size="14" font-weight="bold">WS</text>
+        <text x="100" y="112" fill="#94a3b8" text-anchor="middle" font-size="9">Eq. 22</text>
+        <text x="30" y="30" fill="#34d399" font-size="8">40% CQ</text>
+        <text x="140" y="30" fill="#3b82f6" font-size="8">40% CTS</text>
+        <text x="155" y="175" fill="#fbbf24" font-size="8">10% ANCCS</text>
+        <text x="15" y="175" fill="#a78bfa" font-size="8">10% SES</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="callout def">
+    <strong>Why this weighting?</strong>
+    Quality and speed dominate (80% combined) because the primary goal is fast, high-SINR channel allocation. Stability and spectral cleanliness matter but are secondary — CARLTON is designed to find a high-quality solution <em>quickly</em> while keeping channel hopping manageable. Paper claims ~45% WS margin over Random Agent and ~20% over JAR.
+  </div>
+
+  <!-- Master reference table -->
+  <h3>15.4 Quick reference — all metrics</h3>
+  <table>
+    <tr>
+      <th>Metric</th><th>Paper</th><th>Code function</th><th>Output column</th><th>Direction</th>
+    </tr>
+    <tr><td>QV</td><td>Eq. 12</td><td><code>create_sensed_vector()</code></td><td><code>Ch_0…Ch_9</code> in history</td><td>Higher per channel ↑</td></tr>
+    <tr><td>CQ (vector)</td><td>Eq. 18</td><td><code>channelQuality()</code></td><td>—</td><td>—</td></tr>
+    <tr><td>CQ&#773; (mean)</td><td>Eq. 18</td><td><code>channelQuality()</code></td><td><code>Channel_Quality_meanBased</code></td><td>↑</td></tr>
+    <tr><td>CQ&#8764; (median)</td><td>Eq. 18</td><td><code>channelQuality()</code></td><td><code>Channel_Quality_median</code></td><td>↑</td></tr>
+    <tr><td>min CQ</td><td>Eq. 18</td><td><code>channelQuality()</code></td><td><code>Channel_Quality_min</code></td><td>↑</td></tr>
+    <tr><td>ANCC</td><td>Sec. IV-A</td><td><code>clacANCC()</code></td><td><code>ANCC</code></td><td>↓ lower is better</td></tr>
+    <tr><td>ANCCS</td><td>Eq. 19</td><td><code>clacANCC()</code></td><td><code>ancc_score</code></td><td>↑</td></tr>
+    <tr><td>CT</td><td>Sec. IV-A</td><td><code>convergenceTime()</code></td><td><code>Convergence_Time</code></td><td>↓ lower is better</td></tr>
+    <tr><td>CTS</td><td>Eq. 20</td><td><code>convergenceTime()</code></td><td><code>Convergence_Time_Score</code></td><td>↑</td></tr>
+    <tr><td>SE / SES</td><td>Eq. 21</td><td><code>spectrumEfficiency()</code></td><td><code>Spectrum_Efficiency</code></td><td>↑ (~0.8 paper target)</td></tr>
+    <tr><td><strong>WS</strong></td><td>Eq. 22</td><td><code>get_game_performamce()</code></td><td><code>Weighted_Score</code></td><td>↑ primary metric</td></tr>
+  </table>
+
+  <h3>15.5 How to compute metrics in this repo</h3>
+  <pre class="code"># After running an evaluation episode, game_history is a DataFrame with columns:
+# time, agent_id, action, Ch_0, Ch_1, ..., Ch_9
+
+from Utils.ScenarioExamination import get_game_performamce
+
+metrics = get_game_performamce(
+    game_history,
+    w_cq=0.4, w_ct=0.4, w_annc=0.1, w_se=0.1,   # Eq. 22 weights
+    number_of_channels=10,
+    save_file=False,
+)
+# metrics[11] == Weighted_Score (WS)
+
+# Full pipeline with paper comparison:
+py -3 compare_to_paper.py</pre>
+
+  <h3>15.6 Interpreting your results</h3>
+  <table>
+    <tr><th>Metric</th><th>Typical early training</th><th>Good convergence (paper)</th><th>Campaign (Jun 2026)</th></tr>
+    <tr><td>CQ&#773;</td><td>0.5–0.7</td><td>High, near 1.0</td><td>~0.99 (TF / FedProx finals)</td></tr>
+    <tr><td>min CQ</td><td>0.2–0.4</td><td>&gt; 0.95</td><td>~0.96–0.99 (FedProx fixed-6 best)</td></tr>
+    <tr><td>ANCC / channel changes</td><td>14–16</td><td>Low, stable</td><td>~1.3–2.0 at round 1000</td></tr>
+    <tr><td>SES</td><td>Variable</td><td>~0.8</td><td>~0.79–0.85</td></tr>
+    <tr><td>WS</td><td>Lower</td><td>Best among distributed baselines</td><td>0.90–0.96 vs TF baseline 0.90</td></tr>
+    <tr><td>Reward (training)</td><td>20–50</td><td>Ceiling ≈ 88 (perfect game)</td><td>~78–79.5 (last-20 mean)</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <strong>Training reward ≠ WS</strong>
+    Episode <code>reward</code> in logs is the accumulated CARLTON reward (Eq. 13: personal + social). WS is computed post-hoc from game history using SINR-based QV — use WS/CQ for paper-aligned comparison, and reward for monitoring learning progress.
+  </div>
+
+  <!-- CAMPAIGN_RESULTS_START -->
+  <h3>15.7 Campaign results — FedProx / FedAvg</h3>
+  <p class="campaign-meta"><strong>Campaign:</strong> campaign_20260630 &nbsp;|&nbsp;
+     <strong>Generated:</strong> 2026-07-01 17:47 &nbsp;|&nbsp;
+     <strong>Best E:</strong> 10 &nbsp;|&nbsp; <strong>Best μ:</strong> 0.01</p>
+
+  <div class="callout def">
+    <strong>Paper reference</strong>
+    Perfect-game reward ceiling ≈ 88; centralized training convergence ≈ 79
+    (<code>paper_reference/CARLTON_paper_results.md</code>).
+    Baseline for paper metrics: TF without FL (CTDE) — <em>951 episodes</em>.
+    PyTorch without FL — <em>1000 episodes</em>.
+    Only runs with ≥ 900 episodes/rounds are included.
+  </div>
+
+  <h4>Reward metrics (last-20 mean)</h4>
+  <table><thead><tr>
+<th>Method</th>
+<th>Reward (last 20)</th>
+<th>CC (last 20)</th>
+<th>% of 88</th>
+<th>% vs paper train (~79)</th>
+<th>E</th>
+<th>mu</th>
+<th>Env</th>
+</tr></thead><tbody>
+<tr>
+<td>TF centralized (no FL)</td>
+<td>79.40</td>
+<td>1.38</td>
+<td>90.2%</td>
+<td>100.5%</td>
+<td>—</td>
+<td>—</td>
+<td>random</td>
+</tr>
+<tr>
+<td>PyTorch centralized (no FL)</td>
+<td>78.58</td>
+<td>1.78</td>
+<td>89.3%</td>
+<td>99.5%</td>
+<td>—</td>
+<td>—</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedAvg best random</td>
+<td>77.58</td>
+<td>1.88</td>
+<td>88.2%</td>
+<td>98.2%</td>
+<td>10</td>
+<td>0.0</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedAvg best fixed-6</td>
+<td>76.62</td>
+<td>1.52</td>
+<td>87.1%</td>
+<td>97.0%</td>
+<td>10</td>
+<td>0.0</td>
+<td>fixed</td>
+</tr>
+<tr>
+<td>FedProx best random</td>
+<td>78.82</td>
+<td>1.98</td>
+<td>89.6%</td>
+<td>99.8%</td>
+<td>10</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx best fixed-6</td>
+<td>77.61</td>
+<td>1.91</td>
+<td>88.2%</td>
+<td>98.2%</td>
+<td>10</td>
+<td>0.01</td>
+<td>fixed</td>
+</tr>
+<tr>
+<td>FedProx E=10 (μ=0.01)</td>
+<td>79.51</td>
+<td>1.39</td>
+<td>90.4%</td>
+<td>100.6%</td>
+<td>10</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx E=160 (μ=0.01)</td>
+<td>78.52</td>
+<td>3.00</td>
+<td>89.2%</td>
+<td>99.4%</td>
+<td>160</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx E=1 (μ=0.01)</td>
+<td>79.45</td>
+<td>1.82</td>
+<td>90.3%</td>
+<td>100.6%</td>
+<td>1</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx E=20 (μ=0.01)</td>
+<td>78.94</td>
+<td>1.73</td>
+<td>89.7%</td>
+<td>99.9%</td>
+<td>20</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx E=40 (μ=0.01)</td>
+<td>79.39</td>
+<td>1.82</td>
+<td>90.2%</td>
+<td>100.5%</td>
+<td>40</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx E=80 (μ=0.01)</td>
+<td>77.34</td>
+<td>1.58</td>
+<td>87.9%</td>
+<td>97.9%</td>
+<td>80</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx μ=0.01 (E=1)</td>
+<td>79.52</td>
+<td>1.52</td>
+<td>90.4%</td>
+<td>100.7%</td>
+<td>1</td>
+<td>0.01</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx μ=0.0 (E=1)</td>
+<td>78.99</td>
+<td>1.40</td>
+<td>89.8%</td>
+<td>100.0%</td>
+<td>1</td>
+<td>0.0</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx μ=0.1 (E=1)</td>
+<td>79.38</td>
+<td>1.74</td>
+<td>90.2%</td>
+<td>100.5%</td>
+<td>1</td>
+<td>0.1</td>
+<td>random</td>
+</tr>
+<tr>
+<td>FedProx μ=1.0 (E=1)</td>
+<td>78.01</td>
+<td>1.79</td>
+<td>88.7%</td>
+<td>98.7%</td>
+<td>1</td>
+<td>1.0</td>
+<td>random</td>
+</tr>
+</tbody></table>
+
+  <h4>Paper metrics vs TF without FL</h4>
+  <p>CQ = Channel Quality (QV at final scenario time). ANCCS, CTS, SES, and WS follow Eq. 18–22.
+     FL rows use post-training evaluation on final global weights (20 games). Centralized rows use the last-20-episode training mean.</p>
+  <table><thead><tr>
+<th>Method</th>
+<th>CQ mean</th>
+<th>CQ median</th>
+<th>min CQ</th>
+<th>ANCC</th>
+<th>ANCCS</th>
+<th>CTS</th>
+<th>SES</th>
+<th>WS</th>
+<th>Reward (last 20)</th>
+<th>Avg channel changes (last 20)</th>
+<th>WS vs TF</th>
+</tr></thead><tbody>
+<tr>
+<td>TF without FL</td>
+<td>0.991</td>
+<td>1.000</td>
+<td>0.956</td>
+<td>0.295</td>
+<td>0.986</td>
+<td>0.805</td>
+<td>0.845</td>
+<td>0.901</td>
+<td>79.400</td>
+<td>1.382</td>
+<td>reference</td>
+</tr>
+<tr>
+<td>PyTorch without FL</td>
+<td>0.996<br><small>(101% of TF)</small></td>
+<td>0.996<br><small>(100% of TF)</small></td>
+<td>0.986<br><small>(103% of TF)</small></td>
+<td>1.777<br><small>(602% of TF)</small></td>
+<td>0.911<br><small>(92% of TF)</small></td>
+<td>0.895<br><small>(111% of TF)</small></td>
+<td>0.846<br><small>(100% of TF)</small></td>
+<td>0.938<br><small>(104% of TF)</small></td>
+<td>78.578<br><small>(99% of TF)</small></td>
+<td>1.777<br><small>(129% of TF)</small></td>
+<td>104%</td>
+</tr>
+<tr>
+<td>FedAvg best random (E=10)</td>
+<td>0.991<br><small>(100% of TF)</small></td>
+<td>0.994<br><small>(99% of TF)</small></td>
+<td>0.963<br><small>(101% of TF)</small></td>
+<td>0.190<br><small>(64% of TF)</small></td>
+<td>0.991<br><small>(101% of TF)</small></td>
+<td>0.944<br><small>(117% of TF)</small></td>
+<td>0.830<br><small>(98% of TF)</small></td>
+<td>0.956<br><small>(106% of TF)</small></td>
+<td>77.337<br><small>(97% of TF)</small></td>
+<td>1.318<br><small>(95% of TF)</small></td>
+<td>106%</td>
+</tr>
+<tr>
+<td>FedProx best random (E=10, mu=0.01)</td>
+<td>0.986<br><small>(99% of TF)</small></td>
+<td>0.991<br><small>(99% of TF)</small></td>
+<td>0.951<br><small>(99% of TF)</small></td>
+<td>0.234<br><small>(79% of TF)</small></td>
+<td>0.989<br><small>(100% of TF)</small></td>
+<td>0.946<br><small>(118% of TF)</small></td>
+<td>0.790<br><small>(94% of TF)</small></td>
+<td>0.951<br><small>(105% of TF)</small></td>
+<td>76.899<br><small>(97% of TF)</small></td>
+<td>1.257<br><small>(91% of TF)</small></td>
+<td>105%</td>
+</tr>
+<tr>
+<td>FedAvg best fixed-6 (E=10)</td>
+<td>0.991<br><small>(100% of TF)</small></td>
+<td>1.000<br><small>(100% of TF)</small></td>
+<td>0.959<br><small>(100% of TF)</small></td>
+<td>0.145<br><small>(49% of TF)</small></td>
+<td>0.993<br><small>(101% of TF)</small></td>
+<td>0.950<br><small>(118% of TF)</small></td>
+<td>0.807<br><small>(95% of TF)</small></td>
+<td>0.956<br><small>(106% of TF)</small></td>
+<td>77.556<br><small>(98% of TF)</small></td>
+<td>1.434<br><small>(104% of TF)</small></td>
+<td>106%</td>
+</tr>
+<tr>
+<td>FedProx best fixed-6 (E=10, mu=0.01)</td>
+<td>0.998<br><small>(101% of TF)</small></td>
+<td>1.000<br><small>(100% of TF)</small></td>
+<td>0.989<br><small>(103% of TF)</small></td>
+<td>0.130<br><small>(44% of TF)</small></td>
+<td>0.994<br><small>(101% of TF)</small></td>
+<td>0.952<br><small>(118% of TF)</small></td>
+<td>0.816<br><small>(96% of TF)</small></td>
+<td>0.961<br><small>(107% of TF)</small></td>
+<td>78.956<br><small>(99% of TF)</small></td>
+<td>1.260<br><small>(91% of TF)</small></td>
+<td>107%</td>
+</tr>
+</tbody></table>
+
+  <h4>Learning curves and sweeps</h4>
+  <h4>Main comparison — 4 methods (reward)</h4>
+<div class="diagram campaign-plot"><img src="../experiments/results/campaign_20260630/plots/main_four_methods.png" alt="Main comparison — 4 methods (reward)"/><p class="campaign-meta">Main comparison — 4 methods (reward)</p></div><h4>Main comparison — 4 methods (channel changes)</h4>
+<div class="diagram campaign-plot"><img src="../experiments/results/campaign_20260630/plots/main_four_methods_cc.png" alt="Main comparison — 4 methods (channel changes)"/><p class="campaign-meta">Main comparison — 4 methods (channel changes)</p></div><h4>Paper metrics vs TF without FL</h4>
+<div class="diagram campaign-plot"><img src="../experiments/results/campaign_20260630/plots/paper_metrics_vs_tf.png" alt="Paper metrics vs TF without FL"/><p class="campaign-meta">Paper metrics vs TF without FL</p></div><h4>FedProx E sweep (μ=0.01)</h4>
+<div class="diagram campaign-plot"><img src="../experiments/results/campaign_20260630/plots/fedprox_e_sweep.png" alt="FedProx E sweep (μ=0.01)"/><p class="campaign-meta">FedProx E sweep (μ=0.01)</p></div><h4>FedProx μ sweep (E=1)</h4>
+<div class="diagram campaign-plot"><img src="../experiments/results/campaign_20260630/plots/fedprox_mu_sweep.png" alt="FedProx μ sweep (E=1)"/><p class="campaign-meta">FedProx μ sweep (E=1)</p></div><h4>Best config: random vs fixed topology</h4>
+<div class="diagram campaign-plot"><img src="../experiments/results/campaign_20260630/plots/random_vs_fixed.png" alt="Best config: random vs fixed topology"/><p class="campaign-meta">Best config: random vs fixed topology</p></div>
+
+  <div class="callout good">
+    <strong>How to refresh this section</strong>
+    <code>py -3 experiments/build_html_report.py --campaign-dir experiments/results/campaign_20260630</code>
+  </div>
+
+  <!-- CAMPAIGN_RESULTS_V2_START -->
+  <h3>15.8 Main comparison — ρ=1 FL + 30-seed average</h3>
+  <p class="campaign-meta"><strong>Study:</strong> main_comparison_rho1_multiseed_20260701 &nbsp;|&nbsp;
+     <strong>Generated:</strong> 2026-07-07T11:26:10 &nbsp;|&nbsp;
+     <strong>Seeds per method:</strong> 11 &nbsp;|&nbsp;
+     <strong>Train:</strong> 1000 rounds/ep &nbsp;|&nbsp; <strong>Inference:</strong> 100 episodes (no weight updates)</p>
+
+  <div class="callout def">
+    <strong>Settings</strong>
+    FedAvg / FedProx use personal reward only (<code>ρ = 1</code>).
+    PyTorch and TF centralized baselines keep paper <code>ρ = 0.7</code>.
+    PyTorch display includes only seeds with train last-20 reward above <code>70.0</code>.
+    Each seed: full training then 100 evaluation episodes (ε=0, no backprop).
+    Curves show mean ± std across seeds (smoothed window 20).
+  </div>
+
+  <h4>Aggregated metrics</h4>
+  <table><thead><tr><th>Method</th><th>Train reward (last-20 mean ± std)</th><th>Inference reward (mean ± std)</th></tr></thead><tbody><tr><td>PyTorch without FL (ρ=0.7)</td><td><span>77.91</span> ± 2.08 (n=11)</td><td><span>76.53</span> ± 4.57 (n=11)</td></tr><tr><td>TF without FL (ρ=0.7)</td><td><span>78.70</span> ± 0.77 (n=30)</td><td><span>78.81</span> ± 1.05 (n=30)</td></tr><tr><td>FedAvg best (E=10, ρ=1)</td><td><span>85.99</span> ± 0.98 (n=30)</td><td><span style='font-weight:bold;color:#2e7d32'>86.31</span> ± 1.39 (n=30)</td></tr><tr><td>FedProx best (E=10, μ=0.01, ρ=1)</td><td><span style='font-weight:bold;color:#2e7d32'>86.14</span> ± 0.93 (n=30)</td><td><span>86.24</span> ± 1.03 (n=30)</td></tr></tbody></table>
+
+  <h4>Training curves (mean ± std over seeds)</h4>
+  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_rho1_multiseed_20260701/plots/main_four_methods_rho1_30avg.png" alt="Main comparison training reward"/></div>
+  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_rho1_multiseed_20260701/plots/main_four_methods_cc_rho1_30avg.png" alt="Main comparison channel changes"/></div>
+
+  <h4>Inference reward (frozen weights, 100 episodes per seed)</h4>
+  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_rho1_multiseed_20260701/plots/main_four_methods_inference_30avg.png" alt="Inference reward comparison"/></div>
+
+  <div class="callout good">
+    <strong>Refresh</strong>
+    <code>py -3 experiments/run_main_comparison_multiseed.py --study-dir experiments/results/main_comparison_rho1_multiseed_20260701 --aggregate-only</code>
+  </div>
+  <!-- CAMPAIGN_RESULTS_V2_END -->
+
+    <!-- CAMPAIGN_RESULTS_END -->
+</section>
+
+</main>
+
+<footer>
+  Federated Learning — Comprehensive Theory Guide · fed-channel-alloc / CARLTON FRL<br>
+  Open in browser: <code>docs/federated_learning_theory.html</code>
+</footer>
+
+</body>
+</html>

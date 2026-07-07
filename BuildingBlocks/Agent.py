@@ -52,9 +52,14 @@ class Agent(object):
         self.action = action
         return action
     
-    def learn(self): # experience_replay_buffer
+    def learn(self, global_ref=None, fedprox_mu=0.0): # experience_replay_buffer
         """Perform one replay-based model update for this agent."""
-        cost = self.model.learn(self.experience_replay_buffer ,self.experience_replay_buffer.batch_size)
+        cost = self.model.learn(
+            self.experience_replay_buffer,
+            self.experience_replay_buffer.batch_size,
+            global_ref=global_ref,
+            fedprox_mu=fedprox_mu,
+        )
 
         return cost
     

@@ -13,7 +13,7 @@ def get_path_loss(user1, user2, channel, channel_model = 'Egli'):
     # where d is distance in m, and f_c is channel frequency in MHz, h and g are antennas height and gain.
     h_t, h_r, g_t, g_r = user1.H, user2.H, user1.G, user2.G
     f_c = SPECTRUM[channel] #368 + channel*2      #We operate on the 100Mhz, and the specific channel adds a bit more
-    distance = pdist((user1.location, user2.location))
+    distance = float(pdist((user1.location, user2.location))[0])
     if channel_model == 'Egli':
         x =  40*math.log10(distance) - 20*math.log10(40/f_c) - 20*math.log10(h_t*h_r) - 10*math.log10(g_t*g_r) # [dB]
         return x #dB

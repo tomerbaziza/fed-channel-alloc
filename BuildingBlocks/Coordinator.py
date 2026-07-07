@@ -16,6 +16,7 @@ sys.path.append('SimulationEnvironments/')
 sys.path.append('DeepMellow_Single_agent/')
 import os 
 import numpy as np 
+from copy import deepcopy
 ## Base on Independent learners, all freinds are part of the environment
 from Utils.utils import modify_obs_add_channnel_2b, save_to_gmb ,\
                         update_state, creat_player,save_all_agents_memory,saveAgent
@@ -34,10 +35,12 @@ import pandas as pd
 # MAX_EXPERIENCES = 5000#5000
 # BATCH_SIZE = 32
 NUM_OF_CHANNELS = 10
+# Table II / Eq. (13): personal reward weight rho
+RHO = 0.7
 
 activate_current_algo = False
 
-def calculate_rewards_personal(obs, action, agent) :
+def calculate_rewards_personal(obs, action, agent, rho=None):
     """Compute CARLTON personal reward component.
 
     Paper reference:
@@ -47,8 +50,9 @@ def calculate_rewards_personal(obs, action, agent) :
     - Uses channel quality (`obs[action]`) and ranking among all channels.
     - Gives desired reward when quality exceeds threshold (~zeta=0.9).
     - Adds a stay bonus when the channel does not change.
-    - Scales by 0.6; social term is added later in `calculate_rewards_sw`.
+    - Scales by rho; social term is added later in `calculate_rewards_sw`.
     """
+    rho = RHO if rho is None else float(rho)
     obs = np.squeeze(obs)
     current_channel = action
     value = obs[current_channel]
@@ -75,9 +79,9 @@ def calculate_rewards_personal(obs, action, agent) :
         # it was agent.current channel before updating
         r += 0.1*r 
 
-    return 0.6 * r
+    return rho * r
 
-def calculate_rewards_sw(obs,agent, current_channel, agents, time):
+def calculate_rewards_sw(obs,agent, current_channel, agents, time, rho=None):
     """Compute social welfare reward from nearby agents.
 
     Paper reference:
@@ -86,8 +90,11 @@ def calculate_rewards_sw(obs,agent, current_channel, agents, time):
 
     Implementation note:
     - Neighbors are selected by Euclidean distance <= 500m (Gamma in paper).
-    - This function returns the social contribution scaled by 0.4.
+    - This function returns the social contribution scaled by (1 - rho).
     """
+    rho = RHO if rho is None else float(rho)
+    if rho >= 1.0:
+        return 0.0
     ## fix the -1 
     # print("current:", current_channel)
     
@@ -170,8 +177,8 @@ def calculate_rewards_sw(obs,agent, current_channel, agents, time):
             
     # print("r:", r)
     # print("r_sw:", r_sw) #0.6 * r
-    # Eq. (13) split used in this repository: 0.6 * r_p + 0.4 * r_sw.
-    return  0.4 *r_sw #0.5 * r  + 0.5 *r_sw #
+    # Eq. (13): r = rho * r_p + (1 - rho) * r_sw.
+    return (1.0 - rho) * r_sw
     
 def define_new_agent(i, history_length,
                      learning_rate,
@@ -247,7 +254,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
                 activation_fucntion = None,
                 mellowmax_constant = 0.02,
                 gamma = 0.9,
-                batch_size  = 64,
+                batch_size  = 32,
                 dropout = False,
                 l2_regularization = False,
                 i_d_folder = '',
@@ -255,6 +262,9 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
                 save_to_global_rb = False,
                 global_weights = None,
                 local_train_steps = 20,
+                fedprox_mu = 0.0,
+                persistent_replay_buffer = None,
+                rho = None,
                 verbose = False):
     
     """Run one CARLTON episode over a scenario.
@@ -305,7 +315,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
     agents[agent_id].net_location = net_location
     # print("obs:", obs.shape)
  
-    obs = np.reshape(obs, newshape = (NUM_OF_CHANNELS,1))
+    obs = np.reshape(obs, (NUM_OF_CHANNELS, 1))
     # Eq. (17): s(t) = concatenate(CBR, QV(t)).
     obs = modify_obs_add_channnel_2b(obs,num_of_bits = num_of_bits,
                                     channel = current_master_channel)
@@ -363,7 +373,9 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
             action = agent.sample_action(state_tensor, eps = 0.0, training = training) ## <-- we are going with the max value 
         
         # Section III-C Algorithm 2: personal reward component.
-        reward = calculate_rewards_personal(obs = state[num_of_bits:,0,0], action = action, agent = agent)
+        reward = calculate_rewards_personal(
+            obs=state[num_of_bits:, 0, 0], action=action, agent=agent, rho=rho
+        )
         reward = float(torch.as_tensor(reward, dtype=torch.float32).item())
                                            
         # reward = calculate_rewards(obs = state[num_of_bits:,0,0],
@@ -417,7 +429,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
         
         if agent_id not in agents.keys():
             ### create new state and agent  
-            obs = np.reshape(next_obs, newshape = (NUM_OF_CHANNELS,1))
+            obs = np.reshape(next_obs, (NUM_OF_CHANNELS, 1))
             obs= modify_obs_add_channnel_2b(obs,num_of_bits = num_of_bits,
                                             channel = current_master_channel)
             state = np.stack([obs] * history_length, axis = 2) 
@@ -452,7 +464,7 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
             
         else:
             
-            next_obs = np.reshape(next_obs, newshape = (NUM_OF_CHANNELS,1))
+            next_obs = np.reshape(next_obs, (NUM_OF_CHANNELS, 1))
           
             
             # retro_r = calculate_rewards(obs, agents[agent_id], current_master_channel,agents)## we should define it better 
@@ -460,13 +472,16 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
             # print("previouse_obs:", previouse_obs)
             # sdfsdf = input("sdfs")
             # Section III-C Algorithm 3: delayed social reward update.
-            r_sw = calculate_rewards_sw(obs = previouse_obs,
-                                        agent = agents[agent_id],
-                                        current_channel = current_master_channel,
-                                        agents = agents,
-                                        time = time)
+            r_sw = calculate_rewards_sw(
+                obs=previouse_obs,
+                agent=agents[agent_id],
+                current_channel=current_master_channel,
+                agents=agents,
+                time=time,
+                rho=rho,
+            )
             r_sw = float(torch.as_tensor(r_sw, dtype=torch.float32).item())
-            # Eq. (13): r = rho * r_p + (1-rho) * r_sw (rho=0.6 here).
+            # Eq. (13): r = rho * r_p + (1-rho) * r_sw.
             agents[agent_id].experience_replay_buffer.asrdot[2]+= r_sw # (value = retro_r, index = 2)
             r_and_r_ws_reward = agents[agent_id].experience_replay_buffer.asrdot[2]
             # new = False
@@ -543,13 +558,21 @@ def coordinator(environment, mutex = None, address_algo = '',training= True,
         if mutex:
             mutex.release()
 
+    # Merge episode transitions into persistent local replay (FRL across rounds).
+    if training and persistent_replay_buffer is not None:
+        for agent in agents.values():
+            persistent_replay_buffer.append_from_buffer(agent.experience_replay_buffer)
+        for agent in agents.values():
+            agent.experience_replay_buffer = persistent_replay_buffer
+
     # Local private replay training before federated upload.
     if training and local_train_steps > 0:
+        global_ref = deepcopy(global_weights) if global_weights is not None and fedprox_mu > 0.0 else None
         for agent in agents.values():
             rb = agent.experience_replay_buffer
             if rb.count >= rb.batch_size:
                 for _ in range(local_train_steps):
-                    agent.learn()
+                    agent.learn(global_ref=global_ref, fedprox_mu=fedprox_mu)
 
     return average_accumulated_reward_val, average_change_channel_counter, agents, game_history 
 

@@ -1,0 +1,18 @@
+{
+  "completed_at": "2026-07-01T02:49:06",
+  "mode": "centralized_ctde",
+  "episodes": 1000,
+  "final_assessment": {
+    "status": "pass",
+    "episodes": 1000,
+    "reward_early": 57.036831806117355,
+    "reward_late": 79.02158619716764,
+    "reward_improved": true,
+    "channel_changes_early": 13.26,
+    "channel_changes_late": 1.8516666666666666,
+    "mobility_improved": true,
+    "pct_of_paper_ceiling_88": 89.79725704223596
+  },
+  "last_20_mean_reward": 78.57788540440302,
+  "last_20_mean_cc": 1.7766666666666666
+}

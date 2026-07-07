@@ -279,6 +279,9 @@ obs, info = env.reset()
 
 ## Paper reference map
 
+Full experimental results, metrics, hyperparameters, and a **comparison template** for future runs:  
+[`paper_reference/CARLTON_paper_results.md`](paper_reference/CARLTON_paper_results.md)
+
 | Paper part | Code location |
 |------------|----------------|
 | SINR Eq. (2)–(7) | `Pythonic_Environment.Net.create_sensed_vector`, `create_noise_matrix` |

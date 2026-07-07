@@ -1,3 +1,30 @@
 runs
 __pycache__/
 *.pyc
+Train_weights_frl/
+Train_weights*/
+Train_weights_*/
+Global_RB_Storage*/
+Global_RB_Storage_*/
+training_log*.txt
+train_info.pk
+_check_seeds.py
+
+# Local homework / scratch (not part of repo)
+HW3/
+
+# Experiment outputs (keep only aggregated plot assets referenced by docs)
+experiments/results/**
+!experiments/results/campaign_20260630/
+!experiments/results/campaign_20260630/plots/
+!experiments/results/campaign_20260630/plots/**
+!experiments/results/main_comparison_rho1_multiseed_20260701/
+!experiments/results/main_comparison_rho1_multiseed_20260701/plots/
+!experiments/results/main_comparison_rho1_multiseed_20260701/plots/**
+!experiments/results/main_comparison_rho1_multiseed_20260701/aggregated_summary.json
+
+# LaTeX build artifacts
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc

@@ -9,7 +9,7 @@ def set_random_location_of_networks(number_of_nets):
     number_of_users_in_each_net = []
     
     for k in range(number_of_nets):
-        number_of_users_in_each_net.append(np.random.randint(2,22))
+        number_of_users_in_each_net.append(np.random.randint(1, 16))  # Table II: M in {1,...,15}
         if k == 0:
             mean_x =  (2*np.random.random() - 1 ) * (number_of_nets) * 400
             mean_y =  (2*np.random.random() - 1 ) * (number_of_nets) * 400

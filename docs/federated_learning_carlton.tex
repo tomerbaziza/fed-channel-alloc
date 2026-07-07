@@ -1,0 +1,1015 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{hebrew}
+\setotherlanguage{english}
+
+% קומפילציה: xelatex federated_learning_carlton.tex
+\newfontfamily\hebrewfont{David}[
+  Path=C:/Windows/Fonts/,
+  Extension=.ttf,
+  UprightFont=david,
+  BoldFont=davidbd
+]
+\setmainfont{David}[
+  Path=C:/Windows/Fonts/,
+  Extension=.ttf,
+  UprightFont=david,
+  BoldFont=davidbd,
+  Script=Hebrew
+]
+\newfontfamily\englishfont{Latin Modern Roman}
+\newfontfamily\hebrewfonttt{David}[
+  Path=C:/Windows/Fonts/,
+  Extension=.ttf,
+  UprightFont=david,
+  BoldFont=davidbd,
+  Script=Hebrew
+]
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{bidi}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{placeins}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[framemethod=default]{mdframed}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,decorations.pathmorphing}
+
+% תיבות ידידותיות ל-RTL (bidi) --- מבוססות mdframed (במקום tcolorbox)
+% #1 = צבע (ברירת מחדל gray), #2 = כותרת
+\newenvironment{infobox}[2][gray]{%
+  \par\smallskip
+  \begin{mdframed}[
+    linecolor=#1!60!black,
+    linewidth=0.7pt,
+    backgroundcolor=#1!6,
+    roundcorner=3pt,
+    innertopmargin=7pt,
+    innerbottommargin=7pt,
+    innerleftmargin=8pt,
+    innerrightmargin=8pt,
+    skipabove=6pt,
+    skipbelow=6pt
+  ]%
+  {\color{#1!70!black}\bfseries #2}\par\smallskip
+}{%
+  \end{mdframed}%
+  \par\smallskip
+}
+
+\newenvironment{stepbox}[1]{\begin{infobox}[gray]{#1}}{\end{infobox}}
+
+% תיבת קוד/פסאודו-קוד --- התוכן LTR כדי שלא יתהפך ב-RTL
+\newenvironment{codebox}[1]{\begin{infobox}[gray]{#1}\begin{english}\setLTR}{\end{english}\end{infobox}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=none,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  citecolor=blue!70!black,
+  urlcolor=blue!70!black
+}
+
+\newcommand{\loss}{\ell}
+\newcommand{\FedAvg}{\textsc{FedAvg}}
+\newcommand{\FedProx}{\textsc{FedProx}}
+
+\title{למידה מאוחדת (Federated Learning) ברשתות רדיו קוגניטיביות --- CARLTON}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{השיטה הקלאסית/הריכוזית (Centralized ML)}
+%==============================================================================
+
+במצב הרגיל, אנחנו מניחים שיש לנו בסיס נתונים אחד גדול ($D$) שיושב על שרת יחיד (Data Lake בענן).
+המטרה שלנו היא למצוא את המשקולות $w$ של הרשת שיביאו למינימום את פונקציית ההפסד (השגיאה) הממוצעת על כל המידע:
+\begin{equation}
+  \min_{w} F(w) = \frac{1}{|D|} \sum_{(x,y) \in D} \loss(w; x, y)
+  \label{eq:centralized}
+\end{equation}
+
+\subsection{למה זה רע לרשת הרדיו שלך (CARLTON)?}
+
+\begin{description}[style=nextline, leftmargin=2.5cm, labelwidth=2.2cm]
+  \item[\textbf{רוחב פס מטורף (Bandwidth)}]
+    כדי לאמן מודל כזה, כל מנהל רשת בשטח צריך להזרים בכל מילי-שנייה את נתוני ה-SINR הגולמיים, תדרי השידור, ומטריצות הרעש לענן.
+    ברשתות אלחוטיות זה אבסורד --- אנחנו מבזבזים את רוחב הפס היקר של הרשת רק כדי לשלוח נתונים על רוחב הפס!
+
+  \item[\textbf{אבטחה ופרטיות (Privacy)}]
+    נתוני הרדיו חושפים מיקומים מדויקים של משתמשים, דפוסי תנועה צבאיים או אסטרטגיות מסחריות של מפעילים (כמו סלקום ופרטנר).
+    אף מפעיל לא יסכים להוציא את המידע הגולמי הזה מחוץ לשרת המקומי שלו.
+\end{description}
+
+%==============================================================================
+\section{הגישה של Federated Learning: המהפכה המתמטית}
+%==============================================================================
+
+במקום לאסוף את המידע, אנחנו מבזרים את האופטימיזציה.
+המידע הגולמי ($D_k$) נשאר ``נעול'' בתוך כל סוכן/מנהל רשת $k$.
+
+הנוסחה הגלובלית החדשה שרוצים למזער נראית כך:
+\begin{equation}
+  \min_{w} F(w) = \sum_{k=1}^{K} \frac{n_k}{n} F_k(w)
+  \label{eq:global-fl}
+\end{equation}
+
+כאשר פונקציית ההפסד המקומית של כל סוכן בנפרד היא:
+\begin{equation}
+  F_k(w) = \frac{1}{n_k} \sum_{(x,y) \in D_k} \loss(w; x, y)
+  \label{eq:local-loss}
+\end{equation}
+
+\subsection{מה הנוסחה הזו אומרת בעצם?}
+
+המתמטיקה מוכיחה שאנחנו מנסים להגיע לאותה תוצאה בדיוק כאילו כל המידע היה במקום אחד, אבל בדרך חכמה יותר:
+
+\begin{itemize}
+  \item השרת המרכזי (האגרגטור) \textbf{לא רואה} דגימות מידע $(x, y)$.
+  \item כל סוכן $k$ מחשב את ה-Loss המקומי שלו ($F_k$) על המכשיר שלו, מעדכן את המשקולות שלו, ושולח לשרת רק את \textbf{השינוי במשקולות}.
+  \item השרת מחבר את כל המשקולות בצורה משוקללת (לפי גודל המידע $\frac{n_k}{n}$) כדי ליצור את המודל הגלובלי המאוחד.
+\end{itemize}
+
+%==============================================================================
+\section{למה זה קריטי למחקר שלך (Wireless \& CARLTON)}
+%==============================================================================
+
+הטקסט מסכם בצורה מדויקת שלוש סיבות שבגללן השילוב של CARLTON עם FL הוא פריצת דרך למחקר שלך:
+
+\begin{enumerate}
+  \item \textbf{חיסכון עצום בתקשורת (Bandwidth):}
+    משקולות של רשת עצבית קטנה (כמו ה-DeepMellow שלך) שוקלות כמה עשרות או מאות קילובייטים (KB).
+    לשלוח קובץ כזה פעם ב-$100$ צעדים לשרת זה ``חינמי'' לחלוטין מבחינת עומס על הרשת, בהשוואה לשליחה של גיגה-בייטים (GB) של מדידות רדיו וספקטרום רציפות.
+
+  \item \textbf{עמידה ברגולציה ופרטיות:}
+    המידע המקומי (ה-Replay Buffer של ה-SINR) לעולם לא עוזב את השרת של מנהל הרשת המקומית.
+    הגנה מושלמת על פרטיות המשתמשים וסודיות הרשת.
+
+  \item \textbf{ביזור עומסי חישוב (Scalability):}
+    במקום שרת ענן אחד יקר שיצטרך לעבד מיליוני אפיזודות של RL מכל הארץ, החישוב הפיזי (הסימולציה והרצת הרשת על ה-SINR) מתחלק בין כל מנהלי הרשתות בשטח.
+    השרת המרכזי צריך רק לעשות פעולת חיבור וממוצע פשוטה, שהיא מהירה וזולה מאוד.
+\end{enumerate}
+
+%==============================================================================
+\section{המילון: מה אומרים הסימנים בפרויקט?}
+%==============================================================================
+
+\begin{description}[style=nextline, leftmargin=3cm, labelwidth=2.8cm]
+  \item[$K$ (מספר הקליינטים)]
+    כמות רשתות התקשורת החופפות בסימולציה שלך (למשל, $K=3$ עבור סלקום, פרטנר והרשת הצבאית).
+
+  \item[$w$ (המשקולות הגלובליות)]
+    ה``מוח'' המשותף והמעודכן ביותר של ה-DeepMellow שיושב בשרת המרכזי.
+
+  \item[$w_k$ (המשקולות המקומיות)]
+    ה``מוח'' של רשת $k$, אחרי שהיא התאמנה קצת לבד על נתוני ה-SINR שלה.
+
+  \item[$n_k$ (כמות המידע)]
+    כמות דגימות ה-SINR (או כמות האפיזודות) שרשת $k$ אספה בבאפר המקומי שלה.
+
+  \item[$E$ (Local Epochs)]
+    כמה צעדי אימון מנהל הרשת עושה לבד בבית על הבאפר שלו, לפני שהוא רץ לספר לחבר'ה (לשרת).
+
+  \item[$T$ (סך כל הסיבובים)]
+    כמה פעמים בסך הכל השרת והרשתות הולכים להחליף ביניהם משקולות לאורך כל הריצה.
+\end{description}
+
+%==============================================================================
+\section{אנטומיה של סבב תקשורת (Federated Round)}
+%==============================================================================
+
+בכל סבב תקשורת $t$ (מתוך $T$ סבבים), מתרחש הריקוד הקבוע הבא:
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item \textbf{בחירת משתתפים (Client Selection):}
+    השרת בוחר אילו רשתות משתתפות בסבב הנוכחי (בסימולציה שלך, לרוב נבחר את כולן, כלומר קבוצה $S$).
+
+  \item \textbf{שידור (Broadcast):}
+    השרת שולח את המשקולות הנוכחיות שלו ($w_t$) לכל מנהלי הרשתות.
+    כולם מתחילים את הסבב עם אותו מוח בדיוק.
+
+  \item \textbf{חישוב מקומי (Local Computation):}
+    כאן הקוד של \texttt{Coordinator.py} נכנס לפעולה.
+    כל מנהל רשת מריץ את הלופ במשך $E$ פעמים (Epochs), אוסף נתונים, ומעדכן את המודל המקומי שלו באמצעות \texttt{DeepMellow.learn()}.
+    התוצאה היא משקולות חדשות: $w_k^{t+1}$.
+
+  \item \textbf{העלאה (Upload):}
+    מנהלי הרשתות שולחים לשרת (\texttt{TrainBlock.py}) רק את המשקולות החדשות שלהם.
+
+  \item \textbf{שילוב (Aggregation):}
+    השרת משתמש באלגוריתם שנקרא \FedAvg{} (קיצור של Federated Averaging).
+    הוא עושה ממוצע משוקלל של המשקולות לפי כמות המידע $n_k$ של כל רשת:
+    \begin{equation}
+      w_{t+1} = \sum_{k \in S} \frac{n_k}{n} w_k^{t+1}
+      \label{eq:fedavg-round}
+    \end{equation}
+\end{enumerate}
+
+%==============================================================================
+\section{הדילמה: תקשורת מול חישוב (Client Drift)}
+%==============================================================================
+
+כדי שהמודל יתכנס, הוא צריך הרבה מידע.
+יש לנו שתי דרכים להשיג את זה, וכל אחת מגיעה עם מחיר:
+
+\begin{description}[style=nextline, leftmargin=3.2cm, labelwidth=3cm]
+  \item[\textbf{אפשרות א' (תקשורת גבוהה)}]
+    לעשות אימון מקומי קצר מאוד ($E=1$) ולשלוח מיד לשרת.
+    המשמעות: הרשתות כל הזמן מסונכרנות, אבל אנחנו מציפים את ערוץ התקשורת בהעברות קבצים (משקולות של רשתות עצביות יכולות לשקול המון).
+
+  \item[\textbf{אפשרות ב' (חישוב גבוה)}]
+    להגיד למנהלי הרשתות להתאמן המון זמן לבד ($E$ גדול) ורק אז לשלוח לשרת.
+    זה חוסך המון רוחב פס בתקשורת.
+\end{description}
+
+\subsection{הסכנה: Client Drift (סטיית קליינט)}
+
+כאן יש מלכודת מתמטית.
+אם נגדיר $E$ גדול מדי, כל מנהל רשת יתאמן יותר מדי זמן על בעיות ה-SINR הספציפיות שלו.
+
+ברשת קוגניטיבית זה מסוכן: רשת א' תפתח ``תובנות קיצוניות'' שטובות רק לה, וכאשר השרת ינסה לעשות ממוצע בין התובנות הקיצוניות של רשת א' לתובנות הקיצוניות של רשת ב', הממוצע יצא מודל גרוע שלא מתאים לאף אחת מהן!
+זה נקרא \textbf{Client Drift}.
+
+%==============================================================================
+\section{האתגר הגדול: Non-IID Data (מידע לא אחיד)}
+%==============================================================================
+
+בסטטיסטיקה, \textbf{IID} אומר שהמידע של כולם מתפלג באותו אופן.
+
+אם הסביבה הייתה IID, כל רשת הייתה חווה בדיוק את אותן הפרעות ואותם משתמשים ראשיים (PUs).
+במצב כזה, הממוצע של \FedAvg{} עובד כמו קסם ומתכנס למינימום המושלם.
+
+אבל במציאות של רדיו קוגניטיבי, המידע הוא \textbf{Non-IID}.
+רשת אחת יושבת ליד שדה תעופה וחווה הפרעות ממכ``ם בערוץ $1$, ורשת שנייה יושבת במרכז העיר וחווה עומס של טלפונים בערוץ $4$.
+הנוסחאות המקומיות שלהן (פונקציות ההפסד $\loss$) מושכות לכיוונים שונים לחלוטין.
+
+מכיוון שהמידע הוא Non-IID, לעיתים ממוצע פשוט (\FedAvg) לא יספיק, וזה בדיוק המקום שבו המחקר שלך יכול להתרחב בעתיד לאלגוריתמים מתקדמים יותר כמו \textbf{FedProx} (שמוסיף עונש מתמטי לסוכנים כדי שלא יתרחקו יותר מדי מהמודל הגלובלי).
+
+עכשיו, כשהבנו את הדינמיקה הזו של סבבי התקשורת ואת הסכנה של Client Drift בסביבה עם הפרעות רדיו שונות (Non-IID), אנחנו מבינים בדיוק למה אנחנו צריכים את הפרמטרים האלו בקוד.
+
+%==============================================================================
+\section{האתגר המרכזי: נתונים IID מול Non-IID}
+%==============================================================================
+
+בעולם מושלם, הלמידה המאוחדת הייתה קלה מאוד.
+בעולם האמיתי (וברדיו בפרט), הנתונים שכל מנהל רשת רואה הם שונים לחלוטין.
+
+\begin{description}[style=nextline, leftmargin=2.8cm, labelwidth=2.5cm]
+  \item[\textbf{IID}]
+    (מידע אחיד ומושלם) --- כל מנהלי הרשתות רואים בדיוק את אותה התפלגות של הפרעות ומשתמשים.
+    אם הנתונים היו IID, ממוצע פשוט של המשקולות היה עובד כמו קסם בכל פעם.
+
+  \item[\textbf{Non-IID}]
+    (מידע הטרוגני/מגוון) --- כל מנהל רשת חי ב``מציאות'' משלו.
+    מנהל רשת א' חווה רק הפרעות (מקביל למודל שרואה רק תמונות של כלבים), בעוד מנהל רשת ב' רואה ערוצים פנויים לחלוטין (מודל שרואה רק תמונות של חתולים).
+\end{description}
+
+כדי להבין איך זה פוגש אותך בקוד, הנה פירוט סוגי ה-Non-IID המרכזיים שקיימים בסביבת הרדיו שלך (CARLTON):
+
+\begin{table}[H]
+  \centering
+  \caption{סוגי Non-IID בסביבת הרדיו הקוגניטיבית}
+  \label{tab:non-iid}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+    \toprule
+    \textbf{סוג ה-Non-IID} & \textbf{המשמעות הכללית} & \textbf{מה זה אומר בפרויקט הרדיו (CARLTON)?} \\
+    \midrule
+    Label skew &
+    הטיה בתיוגים &
+    רשת אחת יושבת באזור שקט (ערוצים עם SINR גבוה), ורשת אחרת באזור פקוק. \\
+    \addlinespace
+    Feature skew &
+    הטיה במאפיינים &
+    ערוץ $3$ נראה שונה פיזיקלית (מבחינת תבנית הדעיכה) באזורים גיאוגרפיים שונים. \\
+    \addlinespace
+    Quantity skew &
+    הבדל בכמות המידע &
+    לרשת א' יש $15$ משתמשים (המון דגימות), ולרשת ב' יש רק $2$ משתמשים (מעט דגימות). \\
+    \addlinespace
+    Concept drift &
+    הסביבה עצמה משתנה &
+    בזמן האימון, רשתות אחרות מחליפות תדרים, ולכן מפת ההפרעות משתנה ברגע. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+%==============================================================================
+\section{הפתרון: אלגוריתם FedAvg (Federated Averaging)}
+%==============================================================================
+
+כדי להתמודד עם הבעיות האלו, משתמשים באלגוריתם הקלאסי ביותר של גוגל: \FedAvg.
+
+במקום שכל סוכן ישלח עדכון לשרת על כל דגימת רדיו בודדת (מה שיחנוק את רוחב הפס), כל סוכן מתאמן באופן מקומי למשך מספר אפיזודות (שנקראות כאן $E$), ורק בסוף מעלה את המשקולות הסופיות לשרת.
+
+\subsection{למה ממוצע ``משוקלל'' (Weighted Averaging)?}
+
+נניח שמנהל רשת א' אסף $10{,}000$ דגימות ב-Replay Buffer שלו, ומנהל רשת ב' אסף רק $100$.
+כשהשרת עושה ממוצע, הוא לא יכול לתת להם משקל שווה של $50/50$.
+הוא נותן משקל גדול יותר לרשת שלמדה מיותר נתונים.
+הנוסחה המתמטית של השרת נראית כך:
+\begin{equation}
+  w_{t+1} = \sum_{k \in S_t} \frac{n_k}{\sum_{j \in S_t} n_j} w_k^{t+1}
+  \label{eq:fedavg-weighted}
+\end{equation}
+כאשר $n_k$ הוא כמות הדגימות של סוכן $k$.
+
+%==============================================================================
+\section{פירוק האלגוריתם צעד אחר צעד}
+\label{sec:algorithm-breakdown}
+%==============================================================================
+
+בוא נפרק את האלגוריתם צעד אחר צעד, בצורה הכי ברורה ופרקטית שיש.
+נראה בדיוק מה קורה \textbf{בצד השרת}, מה קורה \textbf{בצד הסוכנים} (מנהלי הרשתות), ואיך הלופים האלו עובדים \textbf{במקביל}.
+
+האלגוריתם מורכב משני חלקים: \textbf{אתחול} ו\textbf{לופ של סבבי תקשורת}.
+
+\subsection{מבט על: מי עושה מה?}
+
+\begin{infobox}[blue]{זרימת סבב FL אחד --- מי עושה מה?}
+\textbf{1. שרת מרכזי} (\texttt{TrainBlock.py}): בחירת $S_t$ $\to$ שידור $w^t$ $\to$ המתנה $\to$ אגרגציה $w^{t+1}$
+
+\vspace{6pt}
+\hrule
+\vspace{6pt}
+
+\textbf{2. שידור למטה} --- כל הסוכנים מקבלים $w^t$ (משקולות, KB)
+
+\vspace{6pt}
+
+\textbf{3. אימון מקומי במקביל} (כל הסוכנים בו-זמנית, בלי לדבר ביניהם):
+\begin{itemize}[nosep,leftmargin=1.2cm]
+  \item \textbf{סוכן $k{=}1$} (\texttt{Coordinator.py}): $E$ epochs על $D_1$
+  \item \textbf{סוכן $k{=}2$} (\texttt{Coordinator.py}): $E$ epochs על $D_2$
+  \item \textbf{סוכן $k{=}K$} (\texttt{Coordinator.py}): $E$ epochs על $D_K$
+\end{itemize}
+
+\vspace{6pt}
+\hrule
+\vspace{6pt}
+
+\textbf{4. העלאה למעלה} --- כל סוכן שולח $w_k$ + $n_k$ (משקולות בלבד)
+
+\vspace{6pt}
+
+\textbf{5. אגרגציה בשרת:}
+$w^{t+1} = \sum_{k \in S_t} \frac{n_k}{n}\, w_k$
+\end{infobox}
+
+\begin{table}[H]
+  \centering
+  \caption{חלוקת אחריות בין שרת לסוכנים}
+  \label{tab:server-vs-clients}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{5.8cm}>{\raggedright\arraybackslash}p{5.8cm}@{}}
+    \toprule
+    \textbf{שלב} & \textbf{שרת (\texttt{TrainBlock})} & \textbf{סוכנים (\texttt{Coordinator})} \\
+    \midrule
+    אתחול &
+    יוצר $w^0$ אקראי &
+    מחזיקים Replay Buffer מקומי $D_k$ \\
+    \addlinespace
+    סבב $t$ &
+    בוחר $S_t$, משדר $w^t$, מחכה, ממצע &
+    מורידים $w^t$, מתאמנים $E$ פעמים, מעלים $w_k$ \\
+    \addlinespace
+    סיום &
+    שומר $w^T$ ב-\texttt{Train\_weights\_frl/} &
+    ממשיכים לפעול עם המודל המעודכן \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+%------------------------------------------------------------------------------
+\subsection{שלב 0: האתחול (שרת)}
+\label{subsec:step0-init}
+%------------------------------------------------------------------------------
+
+\begin{codebox}{פסאודו-קוד --- אתחול}
+\begin{lstlisting}[language={}]
+Server initializes w^0
+\end{lstlisting}
+\end{codebox}
+
+השרת יוצר את רשת ה-DeepMellow הראשונית עם משקולות אקראיות לחלוטין (נסמן אותן כ-$w^0$).
+ברגע זה, הרשת \textbf{לא יודעת כלום} על רדיו קוגניטיבי או על SINR.
+
+\begin{description}[style=nextline, leftmargin=2.8cm, labelwidth=2.5cm]
+  \item[\textbf{בקוד}]
+    יצירת אובייקט \texttt{DeepMellow} חדש ב-\texttt{TrainBlock.py}.
+    המשקולות נשמרות ב-\texttt{state\_dict} של PyTorch.
+
+  \item[\textbf{מה לא קורה}]
+    אף נתון SINR לא נשלח לשרת.
+    כל סוכן כבר אוסף נתונים מקומית לתוך $D_k$ שלו (Replay Buffer), אבל השרת לא רואה אותם.
+\end{description}
+
+%------------------------------------------------------------------------------
+\subsection{שלב 1: הלופ הגלובלי (שרת)}
+\label{subsec:step1-global-loop}
+%------------------------------------------------------------------------------
+
+\begin{codebox}{פסאודו-קוד --- לופ גלובלי (שרת)}
+\begin{lstlisting}[language={}]
+for each round t = 0, 1, 2, ..., T-1:
+    Select clients S_t subset of {1, ..., K}
+    Broadcast w^t to all k in S_t
+    Wait for uploads {w_k} from all k in S_t
+    w^{t+1} <- weighted_average({w_k}, {n_k})
+\end{lstlisting}
+\end{codebox}
+
+השרת מתחיל לנהל את סבבי התקשורת ($T$).
+בכל סבב $t$, הוא בוחר קבוצה של קליינטים ($S_t$) מתוך כלל הרשתות ($K$).
+
+בפרויקט CARLTON, מכיוון שיש מספר קטן של רשתות (למשל $K{=}3$ רשתות חופפות: סלקום, פרטנר, צבא),
+השרת יבחר \textbf{תמיד את כל הרשתות} בכל סבב:
+\[
+  S_t = \{1, 2, \ldots, K\} \quad \text{לכל } t
+\]
+
+\textbf{חשוב:} בשלב זה השרת \emph{רק} משדר משקולות וממתין.
+הוא \textbf{לא} מריץ אימון על SINR.
+
+%------------------------------------------------------------------------------
+\subsection{שלב 2: הלופ המקומי במקביל (הסוכנים)}
+\label{subsec:step2-local-parallel}
+%------------------------------------------------------------------------------
+
+\begin{codebox}{פסאודו-קוד --- לופ מקומי (כל סוכן $k$, במקביל)}
+\begin{lstlisting}[language={}]
+for each client k in S_t in parallel:
+    w_k <- w^t                          # download global weights
+    for epoch e = 1 ... E:
+        for batch B from D_k:
+            w_k <- w_k - eta * grad(l(w_k; B))   # local SGD step
+    upload w_k to server
+\end{lstlisting}
+\end{codebox}
+
+כאן קורה הקסם: הפעולות הבאות קורות \textbf{במקביל} אצל כל מנהלי הרשתות בשטח (סלקום, פרטנר וכו'),
+\textbf{מבלי שהם יודעים אחד על השני}.
+
+\subsubsection{א. הורדת המודל הגלובלי}
+
+\begin{codebox}{הורדה}
+\begin{lstlisting}[language={}]
+w_k <- w^t
+\end{lstlisting}
+\end{codebox}
+
+כל סוכן $k$ מוריד מהשרת את המשקולות הגלובליות הנוכחיות ($w^t$) וטוען אותן לתוך הרשת שלו.
+זוהי פקודת \texttt{load\_state\_dict()} ב-PyTorch.
+
+\begin{itemize}
+  \item לפני השלב: לכל הסוכנים אותו ``מוח'' בדיוק ($w^t$).
+  \item הנתונים המקומיים ($D_k$) נשארים על המכשיר --- לא עוברים בערוץ.
+\end{itemize}
+
+\subsubsection{ב. לופ האפיזודות / האימון המקומי}
+
+\begin{codebox}{אימון מקומי}
+\begin{lstlisting}[language={}]
+for epoch e = 1 ... E:
+    for batch B from D_k:
+        w_k <- w_k - eta * grad(l(w_k; B))
+\end{lstlisting}
+\end{codebox}
+
+הסוכן מתנתק מהרשת החיצונית ומתחיל להתאמן ``בבית'' למשך $E$ פעמים (Epochs):
+
+\begin{enumerate}[label=\alph*.]
+  \item מריץ את רשת הרדיו באמצעות \texttt{Coordinator.py}.
+  \item שולף \textbf{באצ'ים} ($B$) של נתוני SINR ותגמולים מתוך ה-Replay Buffer המקומי ($D_k$).
+  \item מחשב את הגרדיאנט של פונקציית ההפסד:
+    \[
+      \nabla \loss(w_k; B)
+    \]
+  \item מעדכן את המשקולות המקומיות:
+    \[
+      w_k \leftarrow w_k - \eta \, \nabla \loss(w_k; B)
+    \]
+    ב-PyTorch זה הצעד הקלאסי של האופטימייזר: \texttt{optimizer.step()}.
+\end{enumerate}
+
+בסוף השלב הזה, לכל סוכן יש משקולות \textbf{קצת שונות} ($w_k$) שמותאמות בדיוק למה שהוא חווה באזור שלו.
+
+\begin{infobox}[orange]{למה ``במקביל'' חשוב?}
+סוכן 1 יכול להיות ליד שדה תעופה (הפרעות ממכ``ם), סוכן 2 במרכז עיר (עומס סלולרי), וסוכן 3 בצבא (דפוסי שידור שונים).
+כולם מתאמנים \emph{בו-זמנית} על $D_k$ שונה --- אבל כולם מתחילים מאותו $w^t$.
+\end{infobox}
+
+\subsubsection{ג. העלאה לשרת}
+
+כל סוכן מסיים את ה-$E$ אפיזודות שלו ושולח \textbf{רק} את המשקולות המעודכנות ($w_k$) חזרה לשרת המרכזי.
+גודל ההעלאה: עשרות--מאות KB (משקולות DeepMellow), לא GB של מדידות SINR.
+
+%------------------------------------------------------------------------------
+\subsection{שלב 3: האגרגציה / שילוב התובנות (שרת)}
+\label{subsec:step3-aggregation}
+%------------------------------------------------------------------------------
+
+\begin{codebox}{פסאודו-קוד --- אגרגציה (שרת)}
+\begin{lstlisting}[language={}]
+w^{t+1} <- sum over k in S_t of (n_k / sum_j n_j) * w_k
+\end{lstlisting}
+\end{codebox}
+
+השרת חיכה שכולם יסיימו ויעלו את המשקולות שלהם.
+כעת הוא מבצע את הממוצע המשוקלל (Weighted Average) כדי לייצר את המודל של הסבב הבא ($w^{t+1}$):
+\begin{equation}
+  w^{t+1} = \sum_{k \in S_t} \frac{n_k}{\sum_{j \in S_t} n_j} \, w_k
+  \label{eq:fedavg-aggregation-step}
+\end{equation}
+
+\begin{itemize}
+  \item רשת עם יותר דגימות ($n_k$ גדול) משפיעה יותר על המודל הגלובלי.
+  \item אחרי האגרגציה, $w^{t+1}$ הופך ל-$w^t$ של הסבב הבא.
+  \item הלופ חוזר עד $t = T-1$.
+\end{itemize}
+
+%------------------------------------------------------------------------------
+\subsection{האלגוריתם המלא במבט אחד}
+%------------------------------------------------------------------------------
+
+\begin{codebox}{\FedAvg{} --- אלגוריתם מלא}
+\begin{lstlisting}[language={}]
+# --- Initialization (Server) ---
+Server initializes w^0
+
+# --- Communication Rounds ---
+for each round t = 0, 1, 2, ..., T-1:
+
+    # Server: client selection
+    Select clients S_t subset of {1, ..., K}
+
+    # Clients: parallel local training
+    for each client k in S_t in parallel:
+        w_k <- w^t
+        for epoch e = 1 ... E:
+            for batch B from D_k:
+                w_k <- w_k - eta * grad(l(w_k; B))
+        upload w_k to server
+
+    # Server: aggregation
+    w^{t+1} <- sum over k in S_t of (n_k / sum_j n_j) * w_k
+
+# --- End ---
+Server saves w^T
+\end{lstlisting}
+\end{codebox}
+
+\subsection{ציר זמן של סבב יחיד}
+
+\begin{figure}[H]
+  \centering
+  \begin{LTR}
+  \begin{tikzpicture}[
+    x=1.05cm, y=0.85cm,
+    phase/.style={minimum height=0.75cm, align=center, font=\scriptsize, draw, rounded corners},
+    srv/.style={phase, fill=blue!15},
+    cli/.style={phase, fill=green!15},
+    time/.style={font=\scriptsize, anchor=north}
+  ]
+    % time axis
+    \draw[->, thick] (0,0) -- (12.5,0) node[right, font=\small] {זמן};
+
+    % server row
+    \node[left, font=\small\bfseries] at (-0.3, 2.2) {שרת};
+    \node[srv, minimum width=1.8cm] (s1) at (1.2, 2.2) {בחירת $S_t$};
+    \node[srv, minimum width=2.2cm] (s2) at (3.5, 2.2) {שידור $w^t$};
+    \node[srv, minimum width=4.5cm, fill=blue!8] (s3) at (7.2, 2.2) {המתנה...};
+    \node[srv, minimum width=2.5cm] (s4) at (11, 2.2) {אגרגציה $\to w^{t+1}$};
+
+    % clients row
+    \node[left, font=\small\bfseries] at (-0.3, 0.8) {סוכנים};
+    \node[cli, minimum width=1.5cm, opacity=0.4] at (1.2, 0.8) {};
+    \node[cli, minimum width=1.8cm] (c1) at (3.2, 0.8) {טעינת $w^t$};
+    \node[cli, minimum width=5.5cm] (c2) at (7.5, 0.8) {$E$ epochs על $D_k$ (מקביל)};
+    \node[cli, minimum width=2cm] (c3) at (11.5, 0.8) {העלאת $w_k$};
+
+    % sync arrows
+    \draw[dashed, gray] (s2.south) -- (c1.north);
+    \draw[dashed, gray] (c3.north) -- (s4.south);
+
+    \node[time] at (1.2, -0.35) {$t$};
+    \node[time] at (11, -0.35) {$t{+}1$};
+  \end{tikzpicture}
+  \end{LTR}
+  \caption{ציר זמן: השרת משדר, הסוכנים עובדים במקביל, ואז חוזרים לאגרגציה.}
+  \label{fig:timeline-single-round}
+\end{figure}
+
+\subsection{מיפוי ישיר לקוד CARLTON}
+
+\begin{table}[H]
+  \centering
+  \caption{מאיזה שלב באלגוריתם מגיע כל קטע קוד}
+  \label{tab:code-mapping}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{5.5cm}@{}}
+    \toprule
+    \textbf{שלב באלגוריתם} & \textbf{קובץ} & \textbf{פעולה בקוד} \\
+    \midrule
+    אתחול $w^0$ &
+    \texttt{TrainBlock.py} &
+    יצירת מודל DeepMellow ראשוני \\
+    \addlinespace
+    בחירת $S_t$ + שידור $w^t$ &
+    \texttt{TrainBlock.py} &
+    שליחת \texttt{state\_dict} לכל Worker \\
+    \addlinespace
+    $w_k \leftarrow w^t$ &
+    \texttt{Worker.py} &
+    \texttt{load\_state\_dict(global\_weights)} \\
+    \addlinespace
+    לופ $E$ epochs &
+    \texttt{Coordinator.py} &
+    איסוף SINR, תגמול, \texttt{DeepMellow.learn()} \\
+    \addlinespace
+    העלאת $w_k$ &
+    \texttt{Worker.py} $\to$ \texttt{TrainBlock.py} &
+    החזרת \texttt{state\_dict} מעודכן + $n_k$ \\
+    \addlinespace
+    אגרגציה $w^{t+1}$ &
+    \texttt{TrainBlock.py} &
+    \texttt{federated\_averaging()} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+%------------------------------------------------------------------------------
+\subsection{סיכום צעד-אחר-צעד: שרת מול סוכנים}
+\label{subsec:step-by-step-summary}
+%------------------------------------------------------------------------------
+
+האלגוריתם מורכב משני חלקים עיקריים: \textbf{אתחול חד-פעמי} ו\textbf{לופ של $T$ סבבי תקשורת}.
+להלן כל שלב --- מי מבצע אותו, מה בדיוק קורה, ומה עובר בערוץ התקשורת.
+
+\begin{stepbox}{שלב 0 --- אתחול (שרת)}
+\textbf{מי:} שרת \quad|\quad \textbf{פעולה:} אתחול $w^0$\\[4pt]
+\textbf{פירוט:} יצירת DeepMellow עם משקולות אקראיות. הרשת עדיין לא יודעת כלום על SINR.\\[4pt]
+\textbf{תקשורת:} כלום
+\end{stepbox}
+
+\begin{stepbox}{שלב 1א --- בחירת משתתפים (שרת)}
+\textbf{מי:} שרת \quad|\quad \textbf{פעולה:} בחירת $S_t$\\[4pt]
+\textbf{פירוט:} בוחר אילו רשתות משתתפות. אצלך: תמיד $S_t=\{1,\ldots,K\}$ (סלקום, פרטנר, צבא).\\[4pt]
+\textbf{תקשורת:} כלום
+\end{stepbox}
+
+\begin{stepbox}{שלב 1ב --- שידור (שרת $\to$ סוכנים)}
+\textbf{מי:} שרת $\to$ כל הסוכנים \quad|\quad \textbf{פעולה:} שידור $w^t$\\[4pt]
+\textbf{פירוט:} כל הסוכנים מקבלים אותו ``מוח'' גלובלי לתחילת הסבב.\\[4pt]
+\textbf{תקשורת:} משקולות $w^t$ (KB)
+\end{stepbox}
+
+\begin{stepbox}{שלב 2א --- הורדת מודל (סוכן $k$)}
+\textbf{מי:} סוכן $k$ \quad|\quad \textbf{פעולה:} $w_k \leftarrow w^t$\\[4pt]
+\textbf{פירוט:} \texttt{load\_state\_dict()} --- טעינת המשקולות ל-DeepMellow המקומי.\\[4pt]
+\textbf{תקשורת:} ---
+\end{stepbox}
+
+\begin{stepbox}{שלב 2ב --- אימון מקומי (סוכן $k$)}
+\textbf{מי:} סוכן $k$ \quad|\quad \textbf{פעולה:} אימון $E$ epochs\\[4pt]
+\textbf{פירוט:} לולאה על באצ'ים $B \subset D_k$: הרצת \texttt{Coordinator.py}, חישוב $\nabla\loss$, \texttt{optimizer.step()}.\\[4pt]
+\textbf{תקשורת:} --- \quad (הסוכנים עובדים \textbf{במקביל}, בלי לדבר ביניהם)
+\end{stepbox}
+
+\begin{stepbox}{שלב 2ג --- העלאה (סוכן $k$ $\to$ שרת)}
+\textbf{מי:} סוכן $k$ $\to$ שרת \quad|\quad \textbf{פעולה:} העלאת $w_k$\\[4pt]
+\textbf{פירוט:} שליחת המשקולות \textbf{בלבד} אחרי $E$ אפיזודות. הנתונים הגולמיים נשארים מקומית.\\[4pt]
+\textbf{תקשורת:} משקולות $w_k$ + $n_k$
+\end{stepbox}
+
+\begin{stepbox}{שלב 3 --- אגרגציה (שרת)}
+\textbf{מי:} שרת \quad|\quad \textbf{פעולה:} אגרגציה\\[4pt]
+\textbf{פירוט:} ממתין שכל $k \in S_t$ יסיים, ואז:
+$w^{t+1} = \sum_k \frac{n_k}{n} w_k$\\[4pt]
+\textbf{תקשורת:} כלום
+\end{stepbox}
+
+\begin{infobox}[green]{הלופ במקביל --- מה זה אומר בפועל?}
+בשלב 2, \textbf{כל} מנהלי הרשתות (סלקום, פרטנר, צבא) מריצים את \texttt{Coordinator.py} \emph{בו-זמנית} על המחשבים שלהם.
+הם לא מתקשרים ביניהם --- רק עם השרת (הורדה בתחילת הסבב, העלאה בסופו).
+השרת בינתיים ``יושב ומחכה'' עד שכולם מסיימים את ה-$E$ אפיזודות שלהם.
+\end{infobox}
+
+\begin{infobox}[blue]{דוגמה מספרית לסבב אחד ($K=3$, $E=5$)}
+\begin{enumerate}[label=\arabic*., nosep]
+  \item \textbf{שרת} שולח $w^{42}$ לשלוש הרשתות.
+  \item \textbf{סלקום} מתאמן 5 אפיזודות על $D_1$ (עיר צפופה, $n_1{=}8000$) $\Rightarrow$ מקבל $w_1$.
+  \item \textbf{פרטנר} מתאמן 5 אפיזודות על $D_2$ (כפר שקט, $n_2{=}2000$) $\Rightarrow$ מקבל $w_2$.
+  \item \textbf{צבא} מתאמן 5 אפיזודות על $D_3$ (שדה תעופה, $n_3{=}5000$) $\Rightarrow$ מקבל $w_3$.
+  \item \textbf{שרת} מחשב: $w^{43} = \frac{8000}{15000}w_1 + \frac{2000}{15000}w_2 + \frac{5000}{15000}w_3$.
+\end{enumerate}
+\end{infobox}
+
+%==============================================================================
+\section{הדילמה הגדולה: תקשורת לעומת סטיית קליינט}
+%==============================================================================
+
+כאן אתה כמפתח צריך לקבל החלטה שמשפיעה על הביצועים של הפרויקט:
+
+\begin{itemize}
+  \item \textbf{$E$ גדול} (הרבה אימון מקומי):
+    חוסך המון תקשורת (פחות סבבים), אבל מסתכן בכך שכל סוכן יפתח ``תובנות שגויות'' שמתאימות רק לאזור הגיאוגרפי שלו, והממוצע ייכשל (זה נקרא Client Drift).
+
+  \item \textbf{$E$ קטן} (למשל, סבב אחרי כל אפיזודה בודדת):
+    מונע סטיות ושומר על כולם מסונכרנים, אבל דורש המון העברות של משקולות ברשת הפיזית.
+\end{itemize}
+
+%==============================================================================
+\section{\FedProx{} --- אופטימיזציה מאוחדת עם עונש קרבה}
+\label{sec:fedprox}
+%==============================================================================
+
+\begin{quote}
+  \textbf{Li et al., 2020} --- \textit{Federated Optimization in Heterogeneous Networks}.\\
+  מטפל בהטרוגניות (Non-IID) ובסטיית קליינט (Client Drift).
+\end{quote}
+
+%------------------------------------------------------------------------------
+\subsection{מוטיבציה: למה \FedAvg{} נכשל ב-Non-IID ואיך \FedProx{} מציל את המצב?}
+\label{subsec:fedprox-motivation}
+%------------------------------------------------------------------------------
+
+כפי שראינו, ב-\FedAvg, אם לרשת א' ולרשת ב' יש בעיות רדיו שונות לחלוטין (Non-IID), האימון המקומי שלהן ימשוך את המשקולות שלהן ($w_k$) לכיוונים הפוכים ומרוחקים מאוד מהמודל הגלובלי ($w^t$).
+כשהשרת יעשה ממוצע, התוצאה תהיה מודל גרוע שלא מתאים לאף אחת מהן.
+
+\FedProx{} פותר את זה על ידי הוספת ``רסן'' או ``קנס מתמטי'' בזמן האימון המקומי בסוכנים.
+
+\begin{description}[style=nextline, leftmargin=2.8cm, labelwidth=2.5cm]
+  \item[\FedAvg]
+    כל סוכן ממזער רק את $F_k(w)$ --- חופשי לנדוד לאן שירצה בתוך נוף ההפסד המקומי שלו.
+
+  \item[\FedProx]
+    מוסיף איבר קרבה שמעניש על מרחק מ-$w^t$ --- הסוכן לומד מהמידע המקומי, אבל לא ``בורח'' רחוק מדי מהקו הגלובלי.
+\end{description}
+
+\textbf{דוגמה מ-CARLTON:}
+רשת א' ליד שדה תעופה (הפרעות ממכ``ם בערוץ 1) ורשת ב' במרכז עיר (עומס סלולרי בערוץ 4) יפתחו גרדיאנטים שמושכים את $w_k$ לכיוונים מנוגדים.
+ב-\FedAvg, הממוצע של שני הכיוונים האלה יוצר מודל ``אמצע'' גרוע.
+ב-\FedProx, כל סוכן נשאר קרוב יותר ל-$w^t$, והממוצע יציב ושימושי יותר.
+
+%------------------------------------------------------------------------------
+\subsection{פונקציית המטרה המקומית}
+\label{subsec:fedprox-objective}
+%------------------------------------------------------------------------------
+
+במקום שסוכן $k$ ינסה רק למזער את פונקציית ההפסד הרגילה שלו ($F_k(w)$), ב-\FedProx{} הוא מנסה לפתור את המשוואה הבאה:
+\begin{equation}
+  \min_{w} \; F_k(w) + \frac{\mu}{2} \, \lVert w - w^t \rVert^2
+  \label{eq:fedprox-objective}
+\end{equation}
+
+בוא נבין את שני החלקים של הנוסחה:
+
+\begin{description}[style=nextline, leftmargin=3.2cm, labelwidth=3cm]
+  \item[$F_k(w)$]
+    פונקציית ההפסד הרגילה של הסוכן.
+    במקרה שלך: טעות ה-Q-learning של ה-DeepMellow על נתוני ה-SINR המקומיים ב-$D_k$.
+
+  \item[$\dfrac{\mu}{2} \lVert w - w^t \rVert^2$]
+    \textbf{האיבר הפרוקסימלי (Proximal Term).}
+    זהו המרחק הגיאומטרי (מרחק אוקלידי בריבוע) בין המשקולות הנוכחיות של הסוכן ($w$) לבין המשקולות הגלובליות שהשרת שלח לו בתחילת הסבב ($w^t$).
+\end{description}
+
+\subsubsection{מה עושה הפרמטר $\mu$ (מיו)?}
+
+$\mu$ הוא כפתור ה``ווליום'' של הקנס:
+
+\begin{table}[H]
+  \centering
+  \caption{השפעת הפרמטר $\mu$ ב-\FedProx}
+  \label{tab:mu-effect}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{11.5cm}@{}}
+    \toprule
+    \textbf{ערך $\mu$} & \textbf{משמעות} \\
+    \midrule
+    $\mu = 0$ &
+    האיבר הימני נמחק, והאלגוריתם חוזר להיות \FedAvg{} רגיל. הסוכן יכול לנדוד לאן שהוא רוצה. \\
+    \addlinespace
+    $\mu$ ענק &
+    הסוכן יקבל ``עונש'' עצום אם הוא ישנה אפילו קצת את המשקולות. המודל כמעט ולא יזוז מהמקום (שמרני מדי). \\
+    \addlinespace
+    $\mu$ מכוון נכון &
+    (למשל $0.1$ או $0.01$) --- נוצר איזון מושלם: הסוכן מצד אחד לומד מה-SINR המקומי, ומצד שני נשאר קרוב מספיק לקו המחשבה הגלובלי של השרת. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{אינטואיציה מתמטית:} האיבר $\frac{\mu}{2}\lVert w - w^t \rVert^2$ מוסיף ``עלות'' לכל סטייה מ-$w^t$.
+בעדכון גרדיאנט, זה שקול לכוח משיכה חזרה לעוגן הגלובלי:
+\begin{equation}
+  w_k \leftarrow w_k - \eta \left( \nabla F_k(w_k) + \mu \, (w_k - w^t) \right)
+  \label{eq:fedprox-update}
+\end{equation}
+
+%------------------------------------------------------------------------------
+\subsection{אינטואיציה: מודל ``הגומייה''}
+\label{subsec:fedprox-rubber-band}
+%------------------------------------------------------------------------------
+
+חשוב על $w^t$ כ\textbf{עוגן} (anchor).
+כל קליינט חוקר את נוף ההפסד המקומי שלו, אבל ``נמשך'' חזרה לעוגן.
+זה מפחית עדכונים סותרים כשהגרדיאנטים מצביעים לכיוונים שונים (Non-IID).
+
+\begin{figure}[H]
+  \centering
+  \begin{LTR}
+  \begin{tikzpicture}[
+    scale=1.05,
+    anchorpoint/.style={circle, fill=blue!70, inner sep=2pt},
+    endpoint/.style={circle, fill=red!70, inner sep=2pt},
+    drift/.style={-{Stealth}, thick, dashed, red!70},
+    prox/.style={-{Stealth}, thick, green!50!black},
+    band/.style={green!50!black, thick, decorate, decoration={coil, aspect=0.3, segment length=3pt, amplitude=2pt}}
+  ]
+    % loss landscape contour (schematic)
+    \draw[gray!40, thick] (0,0) ellipse (2.8cm and 1.6cm);
+    \draw[gray!25] (-0.5,0.3) ellipse (2.2cm and 1.2cm);
+    \node[font=\scriptsize, gray] at (0,-2.1) {נוף ההפסד המקומי $F_k(w)$};
+
+    % anchor w^t
+    \node[anchorpoint, label={above:$w^t$ (עוגן)}] (wt) at (0,0) {};
+    \draw[blue!50, dashed] (wt) circle (1.1cm);
+    \node[font=\scriptsize, blue!60] at (1.55,0.55) {אזור מותר ($\mu$)};
+
+    % FedAvg drift - wanders far
+    \node[endpoint, label={below right:\textcolor{red!70}{סטיית \FedAvg}}] (wfar) at (2.4,-0.9) {};
+    \draw[drift] (wt) -- (wfar);
+
+    % FedProx - stays near anchor
+    \node[endpoint, label={above right:\textcolor{green!50!black}{\FedProx}}] (wnear) at (0.75,0.55) {};
+    \draw[prox] (wt) -- (wnear);
+    \draw[band] (wt) -- (wnear);
+
+    % legend
+    \node[font=\scriptsize, align=left, anchor=north west] at (-3.2,-2.5) {
+      $\mu$ מגביל עד כמה האימון המקומי\\
+      יכול לנדוד בכל סבב
+    };
+  \end{tikzpicture}
+  \end{LTR}
+  \caption{מודל הגומייה: \FedAvg{} עלול לנדוד רחוק מ-$w^t$; \FedProx{} מגביל את הסטייה.}
+  \label{fig:fedprox-rubber-band}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{ללא עונש} (\FedAvg): הסוכן ``רץ'' לכיוון המינימום המקומי שלו --- עלול להגיע רחוק מ-$w^t$.
+  \item \textbf{עם עונש} (\FedProx): הגומייה מושכת חזרה --- הסוכן נשאר באזור סביב העוגן הגלובלי.
+  \item \textbf{תוצאה:} הממוצע בשרת מקבל משקולות פחות סותרות, והאימון יציב יותר תחת Non-IID.
+\end{itemize}
+
+%------------------------------------------------------------------------------
+\subsection{מתי נרצה להשתמש ב-\FedProx{} ברשת הרדיו?}
+\label{subsec:fedprox-when}
+%------------------------------------------------------------------------------
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item \textbf{פרופילי הפרעה שונים (Heterogeneity):}
+    אם רשת א' נמצאת באזור עירוני צפוף (המון הפרעות) ורשת ב' באזור כפרי שקט.
+    ה-NON-IID כאן הוא לא רק סטטיסטי --- הוא פיזי: מפות SINR שונות לגמרי.
+
+  \item \textbf{חוסר יציבות באימון:}
+    אם במהלך הריצות של \FedAvg{} אתה רואה שגרף התגמול (Reward) או ה-Loss קופץ בפראות (מתנדנד) או מתרחק לחלוטין (לא מתכנס).
+    הוספת $\mu$ תרגיע את הגרף ותייצב את הלמידה.
+
+  \item \textbf{$E$ גדול:}
+    כשאתה רוצה לחסוך תקשורת (אימון מקומי ארוך) אבל חושש מסטיית קליינט --- $\mu$ מאפשר $E$ גבוה יותר בבטחה.
+
+  \item \textbf{השתתפות חלקית ונפילות רשת (Partial Participation):}
+    בעולם הרדיו האמיתי, מכשירים או מנהלי רשתות יכולים להתנתק באמצע סבב (בגלל בעיות קליטה, סוללה או עומס).
+    \FedProx{} מוכח מתמטית כאלגוריתם ששומר על יציבות המודל הגלובלי גם כאשר רק חלק מהסוכנים (שבר $C$) מצליחים להחזיר את המשקולות שלהם בסוף הסבב:
+    \[
+      |S_t| = \lfloor C \cdot K \rfloor, \quad 0 < C \leq 1
+    \]
+\end{enumerate}
+
+%------------------------------------------------------------------------------
+\subsection{פירוק האלגוריתם צעד אחר צעד (\FedProx{})}
+\label{subsec:fedprox-algorithm-steps}
+%------------------------------------------------------------------------------
+
+\FedProx{} זהה ל-\FedAvg{} בכל השלבים --- \textbf{חוץ משלב 2ב} (האימון המקומי).
+השרת, ההורדה, ההעלאה והאגרגציה נשארים בדיוק אותו דבר.
+
+\begin{table}[H]
+  \centering
+  \caption{השוואת שלבים: \FedAvg{} מול \FedProx}
+  \label{tab:fedavg-vs-fedprox-steps}
+  \begin{tabular}{@{}c>{\raggedright\arraybackslash}p{5.5cm}cc@{}}
+    \toprule
+    \textbf{שלב} & \textbf{פעולה} & \FedAvg & \FedProx \\
+    \midrule
+    0 & אתחול $w^0$ (שרת) & $\checkmark$ & $\checkmark$ \\
+    1א & בחירת $S_t$ (שרת) & $\checkmark$ & $\checkmark$ \\
+    1ב & שידור $w^t$ (שרת) & $\checkmark$ & $\checkmark$ \\
+    2א & $w_k \leftarrow w^t$ (סוכן) & $\checkmark$ & $\checkmark$ \\
+    2ב & אימון $E$ epochs (סוכן) & $\nabla F_k$ בלבד & $\nabla F_k + \mu(w_k{-}w^t)$ \\
+    2ג & העלאת $w_k$ (סוכן) & $\checkmark$ & $\checkmark$ \\
+    3 & אגרגציה $w^{t+1}$ (שרת) & $\checkmark$ & $\checkmark$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{codebox}{\FedProx{} --- אלגוריתם מלא (ההבדל מסומן ב-*)}
+\begin{lstlisting}[language={}]
+# --- Initialization (Server) ---
+Server initializes w^0
+
+# --- Communication Rounds ---
+for each round t = 0, 1, 2, ..., T-1:
+
+    # Server: client selection + broadcast
+    Select clients S_t subset of {1, ..., K}
+    Broadcast w^t to all k in S_t
+
+    # Clients: parallel local training
+    for each client k in S_t in parallel:
+        w_k <- w^t
+        for epoch e = 1 ... E:
+            for batch B from D_k:
+                # * FedProx only: proximal term pulls w_k toward w^t
+                w_k <- w_k - eta * (grad(F_k(w_k; B)) + mu * (w_k - w^t))
+        upload w_k to server
+
+    # Server: aggregation (identical to FedAvg)
+    w^{t+1} <- sum over k in S_t of (n_k / sum_j n_j) * w_k
+
+# --- End ---
+Server saves w^T
+\end{lstlisting}
+\end{codebox}
+
+\begin{infobox}[orange]{מה משתנה בקוד CARLTON?}
+רק שורת העדכון ב-\texttt{DeepMellow.learn()} / האופטימייזר:
+במקום \texttt{loss.backward()} על $F_k$ בלבד, מוסיפים את האיבר $\frac{\mu}{2}\|w - w^t\|^2$ ל-loss לפני ה-backward.
+האגרגציה ב-\texttt{TrainBlock.py} נשארת \texttt{federated\_averaging()} ללא שינוי.
+\end{infobox}
+
+%------------------------------------------------------------------------------
+\subsection{השתתפות חלקית --- פירוט נוסף}
+\label{subsec:fedprox-partial}
+%------------------------------------------------------------------------------
+
+\begin{description}[style=nextline, leftmargin=3cm, labelwidth=2.8cm]
+  \item[\textbf{בעיה ב-\FedAvg}]
+    כשמשתתף רק חלק מהרשתות, עדכונים ממקורות שונים בכל סבב --- האימון עלול להיות לא יציב.
+
+  \item[\textbf{יתרון \FedProx}]
+    העונש הקרבה מייצב את האימון גם כשההשתתפות מדורבנת --- מצב נפוץ ברשתות ניידות ואלחוטיות.
+
+  \item[\textbf{ב-CARLTON}]
+    מנהל רשת אחד עלול להיות לא זמין (תחזוקה, קליטה חלשה).
+    \FedProx{} מאפשר להמשיך אימון עם $S_t \subset \{1,\ldots,K\}$ בלי שהמודל הגלובלי ``יתפרק''.
+\end{description}
+
+\begin{infobox}[blue]{השוואה קצרה: \FedAvg{} מול \FedProx{}}
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
+  \toprule
+  & \FedAvg & \FedProx \\
+  \midrule
+  אגרגציה בשרת & ממוצע משוקלל & ממוצע משוקלל (זהה) \\
+  אימון מקומי & $\min F_k(w)$ & $\min F_k(w) + \frac{\mu}{2}\lVert w-w^t\rVert^2$ \\
+  פרמטר נוסף & --- & $\mu \geq 0$ \\
+  Non-IID / Drift & רגיש & עמיד יותר \\
+  השתתפות חלקית & פחות יציב & יציב יותר \\
+  \bottomrule
+\end{tabular}
+\end{center}
+\end{infobox}
+
+%==============================================================================
+\section{החיבור לקוד שלך}
+%==============================================================================
+
+בסעיף ההטמעה הספציפית, מוזכרת ההטמעה ב-\texttt{BuildingBlocks/TrainBlock.py}.
+הפונקציה \texttt{federated\_averaging()} שתיצור ב-PyTorch תיקח את ה-\texttt{state\_dict} (מילון המשקולות של PyTorch) מכל מנהלי הרשתות, תבצע עליהם את הממוצע המשוקלל הזה, ולאחר $1000$ סבבים תשמור את התוצאה בתיקייה \texttt{Train\_weights\_frl/}.
+
+מכיוון שאצלך כל אפיזודה יכולה להסתיים בזמן קצת שונה או עם כמות צעדים שונה, כמות הנתונים ($n_k$) של כל סוכן עשויה להשתנות.
+
+\end{document}
