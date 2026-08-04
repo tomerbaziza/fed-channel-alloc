@@ -1539,9 +1539,9 @@ py -3 compare_to_paper.py</pre>
 
   <!-- CAMPAIGN_RESULTS_V2_START -->
   <h3>15.8 Main comparison — ρ=1 FL + 30-seed average</h3>
-  <p class="campaign-meta"><strong>Study:</strong> main_comparison_rho1_multiseed_20260701 &nbsp;|&nbsp;
-     <strong>Generated:</strong> 2026-07-07T11:26:10 &nbsp;|&nbsp;
-     <strong>Seeds per method:</strong> 11 &nbsp;|&nbsp;
+  <p class="campaign-meta"><strong>Study:</strong> main_comparison_private_buffers_20260801 &nbsp;|&nbsp;
+     <strong>Generated:</strong> 2026-08-03T19:18:57 &nbsp;|&nbsp;
+     <strong>Seeds per method:</strong> 30 &nbsp;|&nbsp;
      <strong>Train:</strong> 1000 rounds/ep &nbsp;|&nbsp; <strong>Inference:</strong> 100 episodes (no weight updates)</p>
 
   <div class="callout def">
@@ -1554,18 +1554,18 @@ py -3 compare_to_paper.py</pre>
   </div>
 
   <h4>Aggregated metrics</h4>
-  <table><thead><tr><th>Method</th><th>Train reward (last-20 mean ± std)</th><th>Inference reward (mean ± std)</th></tr></thead><tbody><tr><td>PyTorch without FL (ρ=0.7)</td><td><span>77.91</span> ± 2.08 (n=11)</td><td><span>76.53</span> ± 4.57 (n=11)</td></tr><tr><td>TF without FL (ρ=0.7)</td><td><span>78.70</span> ± 0.77 (n=30)</td><td><span>78.81</span> ± 1.05 (n=30)</td></tr><tr><td>FedAvg best (E=10, ρ=1)</td><td><span>85.99</span> ± 0.98 (n=30)</td><td><span style='font-weight:bold;color:#2e7d32'>86.31</span> ± 1.39 (n=30)</td></tr><tr><td>FedProx best (E=10, μ=0.01, ρ=1)</td><td><span style='font-weight:bold;color:#2e7d32'>86.14</span> ± 0.93 (n=30)</td><td><span>86.24</span> ± 1.03 (n=30)</td></tr></tbody></table>
+  <table><thead><tr><th>Method</th><th>Train reward (last-20 mean ± std)</th><th>Inference reward (mean ± std)</th></tr></thead><tbody><tr><td>PyTorch without FL (ρ=0.7)</td><td><span>78.78</span> ± 0.80 (n=30)</td><td><span>78.99</span> ± 0.79 (n=30)</td></tr><tr><td>TF without FL (ρ=0.7)</td><td><span>78.46</span> ± 0.82 (n=30)</td><td><span>78.91</span> ± 0.73 (n=30)</td></tr><tr><td>FedAvg best (E=10, ρ=1)</td><td><span style='font-weight:bold;color:#2e7d32'>86.39</span> ± 1.04 (n=30)</td><td><span>86.47</span> ± 1.21 (n=30)</td></tr><tr><td>FedProx best (E=10, μ=0.01, ρ=1)</td><td><span>86.32</span> ± 1.04 (n=30)</td><td><span style='font-weight:bold;color:#2e7d32'>86.64</span> ± 1.01 (n=30)</td></tr></tbody></table>
 
   <h4>Training curves (mean ± std over seeds)</h4>
-  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_rho1_multiseed_20260701/plots/main_four_methods_rho1_30avg.png" alt="Main comparison training reward"/></div>
-  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_rho1_multiseed_20260701/plots/main_four_methods_cc_rho1_30avg.png" alt="Main comparison channel changes"/></div>
+  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_private_buffers_20260801/plots/main_four_methods_rho1_30avg.png" alt="Main comparison training reward"/></div>
+  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_private_buffers_20260801/plots/main_four_methods_cc_rho1_30avg.png" alt="Main comparison channel changes"/></div>
 
   <h4>Inference reward (frozen weights, 100 episodes per seed)</h4>
-  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_rho1_multiseed_20260701/plots/main_four_methods_inference_30avg.png" alt="Inference reward comparison"/></div>
+  <div class="diagram campaign-plot"><img src="../experiments/results/main_comparison_private_buffers_20260801/plots/main_four_methods_inference_30avg.png" alt="Inference reward comparison"/></div>
 
   <div class="callout good">
     <strong>Refresh</strong>
-    <code>py -3 experiments/run_main_comparison_multiseed.py --study-dir experiments/results/main_comparison_rho1_multiseed_20260701 --aggregate-only</code>
+    <code>py -3 experiments/run_main_comparison_multiseed.py --study-dir experiments/results/main_comparison_private_buffers_20260801 --aggregate-only</code>
   </div>
   <!-- CAMPAIGN_RESULTS_V2_END -->
 

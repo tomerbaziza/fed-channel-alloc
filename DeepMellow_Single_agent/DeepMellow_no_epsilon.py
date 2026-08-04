@@ -21,14 +21,26 @@ def masking(obs):
 
 
 class QResNet(nn.Module):
-    """Simple residual MLP that mirrors the legacy dense stack."""
+    """Residual MLP matching CARLTON Table II (3x128, LeakyReLU 0.2, identity out)."""
 
-    def __init__(self, input_dim, output_dim, hidden_dim=128, num_layers=3):
+    def __init__(self, input_dim, output_dim, hidden_dim=128, num_layers=3, weight_init="glorot"):
         super().__init__()
         self.in_layer = nn.Linear(input_dim, hidden_dim)
         self.hidden = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(max(0, num_layers - 1))])
         self.out_layer = nn.Linear(hidden_dim, output_dim)
         self.act = nn.LeakyReLU(negative_slope=0.2)
+        self._init_weights(weight_init)
+
+    def _init_weights(self, weight_init):
+        # Paper Table II: Glorot-Uniform weights, zero biases (Keras Dense default).
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                if weight_init == "glorot":
+                    nn.init.xavier_uniform_(module.weight)
+                elif weight_init == "kaiming":
+                    nn.init.kaiming_uniform_(module.weight, a=0.2, nonlinearity="leaky_relu")
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
 
     def forward(self, x):
         x = self.act(self.in_layer(x))
@@ -175,12 +187,14 @@ def build_deepmellow(
     number_of_nodes=128,
     l2_regularization=0.0,
     device=None,
+    weight_init="glorot",
 ):
     net = QResNet(
         input_dim=int(num_channels_with_bits),
         output_dim=int(number_of_actions),
         hidden_dim=int(number_of_nodes),
         num_layers=int(number_of_layers),
+        weight_init=weight_init,
     )
     return DeepMellow(
         net=net,

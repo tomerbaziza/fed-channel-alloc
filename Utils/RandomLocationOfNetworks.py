@@ -20,9 +20,9 @@ def set_random_location_of_networks(number_of_nets):
             x_mean_chosen_net = locations[index][0]
             y_mean_chosen_net = locations[index][1]
             
-            # randomize Radius and angle  
-            r = np.random.randint(low = 50, high=500)
-            theta =  np.random.randint(low = 0, high=2*np.pi)
+            # randomize Radius and angle -- Algorithm 4: r ~ U[x1,x2], theta ~ U[0,2pi]
+            r = np.random.uniform(low = 50, high=500)
+            theta =  np.random.uniform(low = 0, high=2*np.pi)
             
             mean_x = r * np.cos(theta) + x_mean_chosen_net
             mean_y = r * np.sin(theta) + y_mean_chosen_net

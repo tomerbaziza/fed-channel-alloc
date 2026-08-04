@@ -28,7 +28,7 @@ def _setup_baseline_import_paths():
             sys.path.insert(0, path)
 
 
-def _run_training(n_episodes, seed, i_d_folder=""):
+def _run_training(n_episodes, seed, work_dir, i_d_folder=""):
     _setup_baseline_import_paths()
     from BuildingBlocks.TrainBlock import train_model
     from BuildingBlocks.Worker import worker
@@ -36,13 +36,15 @@ def _run_training(n_episodes, seed, i_d_folder=""):
     from Utils.RandomLocationOfNetworks import set_random_location_of_networks
     from Utils.ScenarioExamination import get_game_performamce
     from Utils.dotdict import dotdict
-    from Utils.get_adress_scen_and_adress_algo import get_adress_scen_and_adress_algo
     from Utils.save_to_df_csv import wrrape_game_history_do_df
 
     np.random.seed(int(seed))
     random.seed(int(seed))
 
-    _, address_algo = get_adress_scen_and_adress_algo(script_path=str(BASELINE_ROOT))
+    # The baseline chdir's to address_algo before creating Train_weights_<tag>/
+    # and Global_RB_Storage_<tag>/. Pointing it at this run's own directory keeps
+    # concurrent seeds from sharing weights and the global replay buffer.
+    address_algo = str(work_dir)
     address_scen = ""
     number_of_possible_nets = 7
     number_of_channels = 10
@@ -58,7 +60,8 @@ def _run_training(n_episodes, seed, i_d_folder=""):
     )
 
     for j in range(int(n_episodes)):
-        number_of_nets = np.random.randint(2, number_of_possible_nets)
+        # Paper: N in {2,...,7} inclusive.
+        number_of_nets = np.random.randint(2, number_of_possible_nets + 1)
         users, centers = set_random_location_of_networks(number_of_nets)
         scenario = python_env(
             number_of_nets=number_of_nets,
@@ -110,17 +113,16 @@ def _run_training(n_episodes, seed, i_d_folder=""):
     return train_info
 
 
-def _run_inference(n_episodes, seed, i_d_folder=""):
+def _run_inference(n_episodes, seed, work_dir, i_d_folder=""):
     _setup_baseline_import_paths()
     from BuildingBlocks.Worker import worker
     from SimulationEnvironments.Pythonic_Environment import python_env
     from Utils.RandomLocationOfNetworks import set_random_location_of_networks
-    from Utils.get_adress_scen_and_adress_algo import get_adress_scen_and_adress_algo
 
     np.random.seed(int(seed))
     random.seed(int(seed))
 
-    _, address_algo = get_adress_scen_and_adress_algo(script_path=str(BASELINE_ROOT))
+    address_algo = str(work_dir)
     address_scen = ""
     number_of_possible_nets = 7
     number_of_channels = 10
@@ -128,7 +130,7 @@ def _run_inference(n_episodes, seed, i_d_folder=""):
     channel_changes = []
 
     for _ in range(int(n_episodes)):
-        number_of_nets = np.random.randint(2, number_of_possible_nets)
+        number_of_nets = np.random.randint(2, number_of_possible_nets + 1)
         users, centers = set_random_location_of_networks(number_of_nets)
         scenario = python_env(
             number_of_nets=number_of_nets,
@@ -177,10 +179,14 @@ def main(argv=None):
     os.environ.setdefault("TF_USE_LEGACY_KERAS", "1")
     os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
 
-    train_info = _run_training(args.episodes, args.seed)
+    # Unique per seed: inference must reuse the folder written during training.
+    tag = f"tf_{args.seed}"
+    train_info = _run_training(args.episodes, args.seed, save_dir, i_d_folder=tag)
     inference = _run_inference(
         args.inference_episodes,
         int(args.seed) + 900_000,
+        save_dir,
+        i_d_folder=tag,
     )
 
     history = {

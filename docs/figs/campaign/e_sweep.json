@@ -1,0 +1,171 @@
+{
+  "10": {
+    "reward": {
+      "mean": 86.54546497475059,
+      "std": 0.8555494125294795,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9980967841682128,
+      "std": 0.001345778152852569,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 14.761484291452263,
+      "std": 0.3646236667278185,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.9692607712483428,
+      "std": 0.0024258928193077083,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_private_buffers_20260801\\fedprox\\seed_00",
+        "reward": 87.10852085098765,
+        "composite": 0.9971428571428571,
+        "rate_mbps": 15.070783830270964,
+        "ws": 0.968196750139108
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_private_buffers_20260801\\fedprox\\seed_01",
+        "reward": 85.33648177836054,
+        "composite": 0.9971474953617812,
+        "rate_mbps": 14.249516772732914,
+        "ws": 0.9669681883338959
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_private_buffers_20260801\\fedprox\\seed_02",
+        "reward": 87.19139229490358,
+        "composite": 1.0,
+        "rate_mbps": 14.964152271352912,
+        "ws": 0.9726173752720243
+      }
+    ]
+  },
+  "20": {
+    "reward": {
+      "mean": NaN,
+      "std": NaN,
+      "n": 0
+    },
+    "composite": {
+      "mean": 0.9953385899814471,
+      "std": 0.0,
+      "n": 1
+    },
+    "rate_mbps": {
+      "mean": 11.590030145975204,
+      "std": 0.0,
+      "n": 1
+    },
+    "ws": {
+      "mean": 0.940003586598789,
+      "std": 0.0,
+      "n": 1
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E20_mu0p01",
+        "reward": NaN,
+        "composite": 0.9953385899814471,
+        "rate_mbps": 11.590030145975204,
+        "ws": 0.940003586598789
+      }
+    ]
+  },
+  "40": {
+    "reward": {
+      "mean": NaN,
+      "std": NaN,
+      "n": 0
+    },
+    "composite": {
+      "mean": 0.9951020408163267,
+      "std": 0.0,
+      "n": 1
+    },
+    "rate_mbps": {
+      "mean": 13.97797040517014,
+      "std": 0.0,
+      "n": 1
+    },
+    "ws": {
+      "mean": 0.9656571151256305,
+      "std": 0.0,
+      "n": 1
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E40_mu0p01",
+        "reward": NaN,
+        "composite": 0.9951020408163267,
+        "rate_mbps": 13.97797040517014,
+        "ws": 0.9656571151256305
+      }
+    ]
+  },
+  "80": {
+    "reward": {
+      "mean": NaN,
+      "std": NaN,
+      "n": 0
+    },
+    "composite": {
+      "mean": 0.9979591836734695,
+      "std": 0.0,
+      "n": 1
+    },
+    "rate_mbps": {
+      "mean": 15.591597414220029,
+      "std": 0.0,
+      "n": 1
+    },
+    "ws": {
+      "mean": 0.9601277112597615,
+      "std": 0.0,
+      "n": 1
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E80_mu0p01",
+        "reward": NaN,
+        "composite": 0.9979591836734695,
+        "rate_mbps": 15.591597414220029,
+        "ws": 0.9601277112597615
+      }
+    ]
+  },
+  "160": {
+    "reward": {
+      "mean": NaN,
+      "std": NaN,
+      "n": 0
+    },
+    "composite": {
+      "mean": 0.9947495361781076,
+      "std": 0.0,
+      "n": 1
+    },
+    "rate_mbps": {
+      "mean": 10.126631541544553,
+      "std": 0.0,
+      "n": 1
+    },
+    "ws": {
+      "mean": 0.9243171085227904,
+      "std": 0.0,
+      "n": 1
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E160_mu0p01",
+        "reward": NaN,
+        "composite": 0.9947495361781076,
+        "rate_mbps": 10.126631541544553,
+        "ws": 0.9243171085227904
+      }
+    ]
+  }
+}

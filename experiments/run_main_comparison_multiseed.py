@@ -126,6 +126,11 @@ def _job_tf(config):
     env["TF_ENABLE_ONEDNN_OPTS"] = "0"
     proc = subprocess.run(cmd, cwd=str(REPO_ROOT), env=env, capture_output=True, text=True)
     if proc.returncode != 0:
+        (save_dir / "job_error.log").write_text(
+            f"returncode={proc.returncode}\n\n--- stderr ---\n{proc.stderr}\n"
+            f"--- stdout (tail) ---\n{proc.stdout[-4000:]}\n",
+            encoding="utf-8",
+        )
         raise RuntimeError(f"TF job failed seed={config['seed']}:\n{proc.stderr}\n{proc.stdout}")
     return {"status": "completed", **config}
 

@@ -87,7 +87,8 @@ def run_centralized_inference(
     rewards = []
     channel_changes = []
     for j in range(int(n_episodes)):
-        number_of_nets = np.random.randint(2, number_of_possible_nets)
+        # Paper: train with N in {2,...,7} inclusive (in-sample domain).
+        number_of_nets = np.random.randint(2, number_of_possible_nets + 1)
         users, centers = set_random_location_of_networks(number_of_nets)
         scenario = python_env(
             number_of_nets=number_of_nets,
@@ -231,7 +232,8 @@ def _single_training_run_body(
         if j % log_every == 0:
             print(f"Episode {j}/{n_episodes}", flush=True)
 
-        number_of_nets = np.random.randint(2, number_of_possible_nets)
+        # Paper: train with N in {2,...,7} inclusive (in-sample domain).
+        number_of_nets = np.random.randint(2, number_of_possible_nets + 1)
         users, centers = set_random_location_of_networks(number_of_nets)
         scenario = python_env(
             number_of_nets=number_of_nets,
