@@ -1,4 +1,139 @@
 {
+  "1": {
+    "reward": {
+      "mean": 86.16739827602889,
+      "std": 1.0031687932481128,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9898412257936067,
+      "std": 0.0045445611753521,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 13.432560271850145,
+      "std": 1.1247940162474883,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.9644069603241893,
+      "std": 0.0016086083433812714,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E1\\seed_00",
+        "reward": 86.9723970292239,
+        "composite": 0.9873619237904953,
+        "rate_mbps": 11.847794555622036,
+        "ws": 0.9632104611098544
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E1\\seed_01",
+        "reward": 84.75321505695085,
+        "composite": 0.9859457671957671,
+        "rate_mbps": 14.106070984445426,
+        "ws": 0.9633295836525683
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E1\\seed_02",
+        "reward": 86.77658274191191,
+        "composite": 0.9962159863945578,
+        "rate_mbps": 14.343815275482976,
+        "ws": 0.9666808362101449
+      }
+    ]
+  },
+  "2": {
+    "reward": {
+      "mean": 86.47455418188798,
+      "std": 0.9374122930014361,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9879169937205652,
+      "std": 0.004682458037435817,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 13.995886078407855,
+      "std": 0.5696487290072094,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.9639884935978992,
+      "std": 0.002104682362708889,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E2\\seed_00",
+        "reward": 87.26444467413425,
+        "composite": 0.9944302721088435,
+        "rate_mbps": 14.081388909359783,
+        "ws": 0.9657785096505069
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E2\\seed_01",
+        "reward": 85.1575636720714,
+        "composite": 0.9856952571238285,
+        "rate_mbps": 13.259400952410557,
+        "ws": 0.9651529548407037
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E2\\seed_02",
+        "reward": 87.00165419945832,
+        "composite": 0.9836254519290234,
+        "rate_mbps": 14.646868373453225,
+        "ws": 0.961034016302487
+      }
+    ]
+  },
+  "5": {
+    "reward": {
+      "mean": 86.33995638559354,
+      "std": 0.9974838485265969,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9954320701344511,
+      "std": 0.0014790139756481581,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 13.730278722536,
+      "std": 0.24154838768733292,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.9676257046959468,
+      "std": 0.0019593267344445043,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E5\\seed_00",
+        "reward": 87.01119704354942,
+        "composite": 0.9937538651824366,
+        "rate_mbps": 13.96111674452115,
+        "ws": 0.9692418512973218
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E5\\seed_01",
+        "reward": 84.92984174465423,
+        "composite": 0.9973523500309215,
+        "rate_mbps": 13.396791394046332,
+        "ws": 0.9648684021884671
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E5\\seed_02",
+        "reward": 87.078830368577,
+        "composite": 0.9951899951899952,
+        "rate_mbps": 13.832928029040517,
+        "ws": 0.9687668606020514
+      }
+    ]
+  },
   "10": {
     "reward": {
       "mean": 86.54546497475059,
@@ -6,165 +141,401 @@
       "n": 3
     },
     "composite": {
-      "mean": 0.9980967841682128,
-      "std": 0.001345778152852569,
+      "mean": 0.9949093317396889,
+      "std": 0.0024082070617251917,
       "n": 3
     },
     "rate_mbps": {
-      "mean": 14.761484291452263,
-      "std": 0.3646236667278185,
+      "mean": 14.238277193681455,
+      "std": 0.1389012451705865,
       "n": 3
     },
     "ws": {
-      "mean": 0.9692607712483428,
-      "std": 0.0024258928193077083,
+      "mean": 0.9666771668767346,
+      "std": 0.0007164682149963399,
       "n": 3
     },
     "per_seed": [
       {
         "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_private_buffers_20260801\\fedprox\\seed_00",
         "reward": 87.10852085098765,
-        "composite": 0.9971428571428571,
-        "rate_mbps": 15.070783830270964,
-        "ws": 0.968196750139108
+        "composite": 0.9976190476190476,
+        "rate_mbps": 14.412656653465083,
+        "ws": 0.9662692421631661
       },
       {
         "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_private_buffers_20260801\\fedprox\\seed_01",
         "reward": 85.33648177836054,
-        "composite": 0.9971474953617812,
-        "rate_mbps": 14.249516772732914,
-        "ws": 0.9669681883338959
+        "composite": 0.9917677808302808,
+        "rate_mbps": 14.229408513764,
+        "ws": 0.9660778931999053
       },
       {
         "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\main_comparison_private_buffers_20260801\\fedprox\\seed_02",
         "reward": 87.19139229490358,
-        "composite": 1.0,
-        "rate_mbps": 14.964152271352912,
-        "ws": 0.9726173752720243
+        "composite": 0.9953411667697383,
+        "rate_mbps": 14.072766413815279,
+        "ws": 0.9676843652671323
+      }
+    ]
+  },
+  "15": {
+    "reward": {
+      "mean": 86.42796211366995,
+      "std": 1.1369965966323607,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9947067317603032,
+      "std": 0.0012211298666059485,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 13.857315049724226,
+      "std": 0.20485654793139857,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.9670603890514955,
+      "std": 0.0012316326827861498,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E15\\seed_00",
+        "reward": 87.1959589531592,
+        "composite": 0.9937309714095428,
+        "rate_mbps": 14.1142249073245,
+        "ws": 0.9653489810755916
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E15\\seed_01",
+        "reward": 84.82053509689513,
+        "composite": 0.9964285714285714,
+        "rate_mbps": 13.844822621959588,
+        "ws": 0.967635574496442
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E15\\seed_02",
+        "reward": 87.26739229095548,
+        "composite": 0.9939606524427953,
+        "rate_mbps": 13.612897619888585,
+        "ws": 0.968196611582453
       }
     ]
   },
   "20": {
     "reward": {
-      "mean": NaN,
-      "std": NaN,
-      "n": 0
+      "mean": 86.3624430694315,
+      "std": 0.7206156537832195,
+      "n": 3
     },
     "composite": {
-      "mean": 0.9953385899814471,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9934615979258837,
+      "std": 0.002363994964803114,
+      "n": 3
     },
     "rate_mbps": {
-      "mean": 11.590030145975204,
-      "std": 0.0,
-      "n": 1
+      "mean": 13.445210991858659,
+      "std": 0.8641514477293945,
+      "n": 3
     },
     "ws": {
-      "mean": 0.940003586598789,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9655193318370582,
+      "std": 0.00047323493563519107,
+      "n": 3
     },
     "per_seed": [
       {
-        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E20_mu0p01",
-        "reward": NaN,
-        "composite": 0.9953385899814471,
-        "rate_mbps": 11.590030145975204,
-        "ws": 0.940003586598789
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E20\\seed_00",
+        "reward": 87.22958752982954,
+        "composite": 0.9963280766852195,
+        "rate_mbps": 13.826369235030796,
+        "ws": 0.9649206125696228
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E20\\seed_01",
+        "reward": 85.46521607077122,
+        "composite": 0.9935183863755292,
+        "rate_mbps": 14.26020403683532,
+        "ws": 0.9655596965180072
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E20\\seed_02",
+        "reward": 86.39252560769377,
+        "composite": 0.9905383307169021,
+        "rate_mbps": 12.249059703709863,
+        "ws": 0.9660776864235446
       }
     ]
   },
   "40": {
     "reward": {
-      "mean": NaN,
-      "std": NaN,
-      "n": 0
+      "mean": 86.3249065476242,
+      "std": 0.7078761120534469,
+      "n": 3
     },
     "composite": {
-      "mean": 0.9951020408163267,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9950947531304674,
+      "std": 0.002485327892305136,
+      "n": 3
     },
     "rate_mbps": {
-      "mean": 13.97797040517014,
-      "std": 0.0,
-      "n": 1
+      "mean": 13.886453457989665,
+      "std": 0.894737928527227,
+      "n": 3
     },
     "ws": {
-      "mean": 0.9656571151256305,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9649759363751366,
+      "std": 0.0002599853493807723,
+      "n": 3
     },
     "per_seed": [
       {
-        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E40_mu0p01",
-        "reward": NaN,
-        "composite": 0.9951020408163267,
-        "rate_mbps": 13.97797040517014,
-        "ws": 0.9656571151256305
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E40\\seed_00",
+        "reward": 87.00743513723214,
+        "composite": 0.998015873015873,
+        "rate_mbps": 14.376603394162808,
+        "ws": 0.9647445281175712
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E40\\seed_01",
+        "reward": 85.3494112788843,
+        "composite": 0.991941391941392,
+        "rate_mbps": 12.631106882279733,
+        "ws": 0.9648442011445062
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E40\\seed_02",
+        "reward": 86.61787322675613,
+        "composite": 0.9953269944341373,
+        "rate_mbps": 14.651650097526451,
+        "ws": 0.9653390798633327
+      }
+    ]
+  },
+  "60": {
+    "reward": {
+      "mean": 86.49066463744332,
+      "std": 0.8024467602628846,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9948619832548404,
+      "std": 0.0031937925396312693,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 14.760935132903946,
+      "std": 0.7324442578879258,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.9433169063416059,
+      "std": 0.002233871168928503,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E60\\seed_00",
+        "reward": 87.28130942504603,
+        "composite": 0.9904532967032967,
+        "rate_mbps": 13.868500324609338,
+        "ws": 0.9459763071480815
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E60\\seed_01",
+        "reward": 85.39033031504636,
+        "composite": 0.9962159863945578,
+        "rate_mbps": 14.75176043009548,
+        "ws": 0.9434640136820986
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E60\\seed_02",
+        "reward": 86.80035417223756,
+        "composite": 0.9979166666666667,
+        "rate_mbps": 15.66254464400702,
+        "ws": 0.9405103981946374
       }
     ]
   },
   "80": {
     "reward": {
-      "mean": NaN,
-      "std": NaN,
-      "n": 0
+      "mean": 86.07731809332044,
+      "std": 0.9019851800201335,
+      "n": 3
     },
     "composite": {
-      "mean": 0.9979591836734695,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9922060303012685,
+      "std": 0.006218169422511037,
+      "n": 3
     },
     "rate_mbps": {
-      "mean": 15.591597414220029,
-      "std": 0.0,
-      "n": 1
+      "mean": 13.756741920362117,
+      "std": 0.9172526961465225,
+      "n": 3
     },
     "ws": {
-      "mean": 0.9601277112597615,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9442825620870128,
+      "std": 0.021736865958928105,
+      "n": 3
     },
     "per_seed": [
       {
-        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E80_mu0p01",
-        "reward": NaN,
-        "composite": 0.9979591836734695,
-        "rate_mbps": 15.591597414220029,
-        "ws": 0.9601277112597615
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E80\\seed_00",
+        "reward": 86.86292080669317,
+        "composite": 0.9978354978354979,
+        "rate_mbps": 13.983099165992277,
+        "ws": 0.9581010103235093
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E80\\seed_01",
+        "reward": 84.81417934227487,
+        "composite": 0.9835406326477756,
+        "rate_mbps": 14.749728095800506,
+        "ws": 0.9611541049628306
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E80\\seed_02",
+        "reward": 86.5548541309933,
+        "composite": 0.9952419604205319,
+        "rate_mbps": 12.537398499293564,
+        "ws": 0.9135925709746985
       }
     ]
   },
-  "160": {
+  "120": {
     "reward": {
-      "mean": NaN,
-      "std": NaN,
-      "n": 0
+      "mean": 85.95974043540137,
+      "std": 0.7635162628249155,
+      "n": 3
     },
     "composite": {
-      "mean": 0.9947495361781076,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9907733800590943,
+      "std": 0.004088194654685094,
+      "n": 3
     },
     "rate_mbps": {
-      "mean": 10.126631541544553,
-      "std": 0.0,
-      "n": 1
+      "mean": 13.738335825975339,
+      "std": 0.5959873080186913,
+      "n": 3
     },
     "ws": {
-      "mean": 0.9243171085227904,
-      "std": 0.0,
-      "n": 1
+      "mean": 0.9219744767325033,
+      "std": 0.020941885666794124,
+      "n": 3
     },
     "per_seed": [
       {
-        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\campaign_20260630\\sweeps\\fedprox_E160_mu0p01",
-        "reward": NaN,
-        "composite": 0.9947495361781076,
-        "rate_mbps": 10.126631541544553,
-        "ws": 0.9243171085227904
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E120\\seed_00",
+        "reward": 86.45654171014186,
+        "composite": 0.9866071428571429,
+        "rate_mbps": 13.363060332705961,
+        "ws": 0.9351323691983394
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E120\\seed_01",
+        "reward": 84.88108261169705,
+        "composite": 0.9893849206349206,
+        "rate_mbps": 14.57956177254376,
+        "ws": 0.8924173612445133
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E120\\seed_02",
+        "reward": 86.54159698436517,
+        "composite": 0.9963280766852195,
+        "rate_mbps": 13.272385372676291,
+        "ws": 0.9383736997546573
+      }
+    ]
+  },
+  "200": {
+    "reward": {
+      "mean": 84.7887807660188,
+      "std": 0.6613130689796107,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9887319470652804,
+      "std": 0.002642075174909675,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 13.483989851649396,
+      "std": 1.142345068894956,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.8543905909341872,
+      "std": 0.010525432698133427,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E200\\seed_00",
+        "reward": 85.49247011498754,
+        "composite": 0.9854964149607007,
+        "rate_mbps": 12.995596760713,
+        "ws": 0.8395990698871146
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E200\\seed_01",
+        "reward": 83.90343966425885,
+        "composite": 0.9919681508967223,
+        "rate_mbps": 15.061802731070927,
+        "ws": 0.860342301922593
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E200\\seed_02",
+        "reward": 84.97043251881004,
+        "composite": 0.9887312753384182,
+        "rate_mbps": 12.394570063164261,
+        "ws": 0.8632304009928541
+      }
+    ]
+  },
+  "300": {
+    "reward": {
+      "mean": 84.33507429154429,
+      "std": 0.8440085782709201,
+      "n": 3
+    },
+    "composite": {
+      "mean": 0.9806201074058217,
+      "std": 0.0029637241545869093,
+      "n": 3
+    },
+    "rate_mbps": {
+      "mean": 13.157976091375888,
+      "std": 0.2166424051127666,
+      "n": 3
+    },
+    "ws": {
+      "mean": 0.8025221889226009,
+      "std": 0.03244593958128405,
+      "n": 3
+    },
+    "per_seed": [
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E300\\seed_00",
+        "reward": 84.21032608762027,
+        "composite": 0.9765516725338154,
+        "rate_mbps": 13.338307691157922,
+        "ws": 0.7595908525433096
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E300\\seed_01",
+        "reward": 83.36941428195861,
+        "composite": 0.9817817599067599,
+        "rate_mbps": 12.85330788327087,
+        "ws": 0.8380158206310403
+      },
+      {
+        "seed_dir": "C:\\Users\\User\\fed-channel-alloc\\experiments\\results\\e_sweep_dense_20260804\\E300\\seed_02",
+        "reward": 85.42548250505399,
+        "composite": 0.9835268897768898,
+        "rate_mbps": 13.282312699698869,
+        "ws": 0.8099598935934527
       }
     ]
   }

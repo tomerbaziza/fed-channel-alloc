@@ -35,30 +35,37 @@ def load_history_rewards(sweep_root: Path):
     return out
 
 
+def _style_e_axis(ax, es, chosen_e: int):
+    """Equal spacing for discrete E; rotate labels so they stay readable."""
+    xpos = np.arange(len(es))
+    ax.set_xticks(xpos)
+    ax.set_xticklabels([str(e) for e in es], rotation=45, ha="right", fontsize=7.5)
+    ax.set_xlim(-0.4, len(es) - 0.6)
+    if chosen_e in es:
+        ax.axvline(es.index(chosen_e), color="0.55", linestyle="--", linewidth=1.1,
+                   label=f"$E={chosen_e}$ (chosen)")
+    return xpos
+
+
 def plot_from_eval(results: dict, out_path: Path, chosen_e: int = 10):
     es = sorted(int(e) for e in results)
     panels = [
-        ("reward", "Inference reward", "#4C78A8"),
         ("composite", r"$\mathbb{E}[(\mathrm{CQ}+\min_{\mathrm{CQ}})/2]$", "#54A24B"),
         ("rate_mbps", "Throughput [Mbps]", "#F58518"),
     ]
-    fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.3))
+    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.5))
     for ax, (key, ylabel, color) in zip(axes, panels):
         means = np.array([results[str(e)][key]["mean"] for e in es])
         stds = np.array([results[str(e)][key]["std"] for e in es])
-        ax.errorbar(es, means, yerr=stds, marker="o", color=color,
+        xpos = _style_e_axis(ax, es, chosen_e)
+        ax.errorbar(xpos, means, yerr=stds, marker="o", color=color,
                     capsize=3, linewidth=1.8, markersize=6)
-        best = es[int(np.nanargmax(means))]
-        ax.axvline(chosen_e, color="0.55", linestyle="--", linewidth=1.1,
-                   label=f"$E={chosen_e}$ (chosen)")
-        ax.scatter([best], [means[es.index(best)]], marker="*", s=190,
+        best_i = int(np.nanargmax(means))
+        ax.scatter([xpos[best_i]], [means[best_i]], marker="*", s=190,
                    color=color, edgecolor="black", zorder=5, linewidth=0.6)
-        ax.set_xscale("log")
-        ax.set_xticks(es)
-        ax.set_xticklabels([str(e) for e in es])
         ax.set_xlabel("Local steps $E$")
         ax.set_ylabel(ylabel, fontsize=9)
-        ax.grid(alpha=0.3)
+        ax.grid(alpha=0.3, axis="y")
         if ax is axes[0]:
             ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
@@ -70,20 +77,17 @@ def plot_from_eval(results: dict, out_path: Path, chosen_e: int = 10):
 def plot_from_histories(rewards: dict, out_path: Path, chosen_e: int = 10):
     es = sorted(rewards)
     vals = [rewards[e] for e in es]
-    fig, ax = plt.subplots(figsize=(5.2, 3.6))
-    ax.plot(es, vals, marker="o", color="#4C78A8", linewidth=2.0, markersize=7)
+    fig, ax = plt.subplots(figsize=(6.2, 3.8))
+    xpos = _style_e_axis(ax, es, chosen_e)
+    ax.plot(xpos, vals, marker="o", color="#4C78A8", linewidth=2.0, markersize=7)
     best = es[int(np.argmax(vals))]
-    ax.axvline(chosen_e, color="0.55", linestyle="--", linewidth=1.1,
-               label=f"$E={chosen_e}$ (chosen)")
-    ax.scatter([best], [rewards[best]], marker="*", s=220, color="#F58518",
-               edgecolor="black", zorder=5, linewidth=0.7, label=f"best ($E={best}$)")
-    ax.set_xscale("log")
-    ax.set_xticks(es)
-    ax.set_xticklabels([str(e) for e in es])
+    ax.scatter([xpos[es.index(best)]], [rewards[best]], marker="*", s=220,
+               color="#F58518", edgecolor="black", zorder=5, linewidth=0.7,
+               label=f"best ($E={best}$)")
     ax.set_xlabel("Local steps $E$")
     ax.set_ylabel("Train reward (last-20 mean)")
     ax.set_title(r"FedProx sensitivity to local steps $E$ ($\mu=0.01$)")
-    ax.grid(alpha=0.3)
+    ax.grid(alpha=0.3, axis="y")
     ax.legend(frameon=False, loc="lower left")
     fig.tight_layout()
     fig.savefig(out_path, dpi=200)

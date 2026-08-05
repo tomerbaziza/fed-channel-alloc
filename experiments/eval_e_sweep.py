@@ -139,32 +139,36 @@ def evaluate_arm(seed_dirs, games, base_seed):
 
 
 PANELS = [
-    ("reward", "Inference reward", "#4C78A8"),
-    ("composite", r"Composite CQ  $\mathbb{E}[(\mathrm{CQ}+\min_{\mathrm{CQ}})/2]$", "#54A24B"),
+    ("composite", r"$\mathbb{E}[(\mathrm{CQ}+\min_{\mathrm{CQ}})/2]$", "#54A24B"),
     ("rate_mbps", "Throughput [Mbps]", "#F58518"),
 ]
 
 
 def plot(results, out_path: Path, chosen_e: int = 10):
     es = sorted(int(e) for e in results)
-    fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.3))
+    xpos = np.arange(len(es))
+    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.5))
     for ax, (key, ylabel, color) in zip(axes, PANELS):
         means = np.array([results[str(e)][key]["mean"] for e in es])
         stds = np.array([results[str(e)][key]["std"] for e in es])
         ax.errorbar(
-            es, means, yerr=stds, marker="o", color=color,
+            xpos, means, yerr=stds, marker="o", color=color,
             capsize=3, linewidth=1.8, markersize=6,
         )
-        best = es[int(np.nanargmax(means))]
-        ax.axvline(chosen_e, color="0.55", linestyle="--", linewidth=1.1)
-        ax.scatter([best], [means[es.index(best)]], marker="*", s=190,
+        best_i = int(np.nanargmax(means))
+        if chosen_e in es:
+            ax.axvline(es.index(chosen_e), color="0.55", linestyle="--", linewidth=1.1,
+                       label=f"$E={chosen_e}$ (chosen)")
+        ax.scatter([xpos[best_i]], [means[best_i]], marker="*", s=190,
                    color=color, edgecolor="black", zorder=5, linewidth=0.6)
-        ax.set_xscale("log")
-        ax.set_xticks(es)
-        ax.set_xticklabels([str(e) for e in es])
+        ax.set_xticks(xpos)
+        ax.set_xticklabels([str(e) for e in es], rotation=45, ha="right", fontsize=7.5)
+        ax.set_xlim(-0.4, len(es) - 0.6)
         ax.set_xlabel("Local steps $E$")
         ax.set_ylabel(ylabel, fontsize=9)
-        ax.grid(alpha=0.3)
+        ax.grid(alpha=0.3, axis="y")
+        if ax is axes[0]:
+            ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig(out_path, dpi=200)
     fig.savefig(out_path.with_suffix(".pdf"))
